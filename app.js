@@ -1,4 +1,3 @@
-
 const currentPath = window.location.pathname;
 const isMarch7thPage = currentPath.includes('march7th.php') ? 1 : 0;
 
@@ -29,9 +28,11 @@ async function loadData() {
         const data = await response.json();
 
         if (data.status === 'success') {
-            document.getElementById('tong-toan-bo').innerText = formatCurrency(data.totals.tong_toan_bo);
-            document.getElementById('tong-da-mua').innerText = formatCurrency(data.totals.tong_da_mua);
-            document.getElementById('tong-chua-mua').innerText = formatCurrency(data.totals.tong_chua_mua);
+            if (document.getElementById('tong-toan-bo')) {
+                document.getElementById('tong-toan-bo').innerText = formatCurrency(data.totals.tong_toan_bo);
+                document.getElementById('tong-da-mua').innerText = formatCurrency(data.totals.tong_da_mua);
+                document.getElementById('tong-chua-mua').innerText = formatCurrency(data.totals.tong_chua_mua);
+            }
 
             renderProducts(data.products);
         } else {
@@ -44,42 +45,62 @@ async function loadData() {
 
 function renderProducts(products) {
     const listContainer = document.getElementById('product-list');
-    listContainer.innerHTML = ''; // Xóa sạch dữ liệu cũ
+    listContainer.innerHTML = '';
 
     if (products.length === 0) {
-        listContainer.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: #777;">Không có sản phẩm nào khớp với bộ lọc.</p>';
+        listContainer.innerHTML = '<p class="empty-state">Không có sản phẩm nào khớp với bộ lọc.</p>';
         return;
     }
 
-    products.forEach(p => {
+    products.forEach((p, index) => {
         const categoryName = p.ten_danh_muc ? p.ten_danh_muc : 'Chưa phân loại';
 
-        // TÍNH TOÁN TRẠNG THÁI CHO NÚT BẤM
-        const statusText = p.da_mua == 1 ? 'Đã mua' : 'Chưa mua';
-        const statusClass = p.da_mua == 1 ? 'bought' : 'unbought';
-        const nextStatus = p.da_mua == 1 ? 0 : 1; // Giá trị sẽ gửi đi khi bị bấm vào
+        const isBought   = p.da_mua == 1;
+        const nextStatus = isBought ? 0 : 1;
+        const cardClass  = isBought ? 'product-card status-bought' : 'product-card';
+        const badgeClass = isBought ? 'badge-status badge-da-mua'  : 'badge-status badge-chua-mua';
+        const badgeText  = isBought ? '✓ Đã mua'                   : '⏳ Chưa mua';
+
+        const imgTag = p.hinh_san_pham
+            ? `<img class="card-img" src="${p.hinh_san_pham}" alt="${p.ten_san_pham}"
+                    onerror="this.outerHTML='<div class=\\'card-img-placeholder\\'>🌸</div>'">`
+            : `<div class="card-img-placeholder">🌸</div>`;
+
+        const nhanVatTag = p.ten_nhan_vat
+            ? `<span>Nhân vật: <b>${p.ten_nhan_vat}</b></span>` : '';
+        const nguoiMuaTag = p.nguoi_mua
+            ? `<span>Người mua: <b>${p.nguoi_mua}</b></span>`
+            : `<span>Người mua: <b>Chưa có</b></span>`;
+
+        // TÍNH TỔNG TIỀN CHO TỪNG SẢN PHẨM (Giá x Số lượng)
+        const tongTienSanPham = p.gia * p.so_luong;
 
         const html = `
-            <div class="product-item">
-                <img src="${p.hinh_san_pham}" alt="${p.ten_san_pham}" onerror="this.src='https://via.placeholder.com/120?text=No+Image'">
-                
-                <div class="product-info">
-                    <h4>${p.ten_san_pham}</h4>
-                    <p class="price">${formatCurrency(p.gia)}</p>
-                    <p>Số lượng: <strong>${p.so_luong}</strong></p>
-                    <p>Loại: <strong>${categoryName}</strong></p>
-                    <p>Shop: ${p.shop_ban}</p>
-                    <p>Người mua: <strong>${p.nguoi_mua ? p.nguoi_mua : 'Chưa có'}</strong></p>
-                </div> 
-                <div class="action-buttons">
-                    <button class="btn-status ${statusClass}" onclick="toggleBuyStatus(${p.id}, ${nextStatus})">
-                        ${statusText}
-                    </button>
+            <div class="${cardClass}" style="animation-delay: ${index * 0.05}s">
+                ${imgTag}
+
+                <div class="card-body">
+                    <p class="card-title">${p.ten_san_pham}</p>
+                    <p class="card-price">${formatCurrency(p.gia)}</p>
                     
-                    <div class="action-row">
-                        <button class="btn-edit" onclick="editProduct(${p.id})">Sửa</button>
-                        <button class="btn-delete" onclick="deleteProduct(${p.id})">Xóa</button>
+                    <div class="card-meta">
+                        <span>Số lượng: <b>${p.so_luong}</b></span>
+                        <span>Tổng: <b style="color: var(--pink-deep);">${formatCurrency(tongTienSanPham)}</b></span>
+                        
+                        <span>Loại: <b>${categoryName}</b></span>
+                        <span>Shop: <b>${p.shop_ban}</b></span>
+                        ${nhanVatTag}
+                        ${nguoiMuaTag}
                     </div>
+                    
+                    <button class="${badgeClass}" onclick="toggleBuyStatus(${p.id}, ${nextStatus})">
+                        ${badgeText}
+                    </button>
+                </div>
+
+                <div class="card-actions">
+                    <button class="btn-edit-card"   onclick="editProduct(${p.id})">✏️ Sửa</button>
+                    <button class="btn-delete-card" onclick="deleteProduct(${p.id})">🗑️ Xóa</button>
                 </div>
             </div>
         `;
@@ -265,3 +286,12 @@ async function loadCategories() {
         console.error("Lỗi tải danh mục:", error);
     }
 }
+
+window.addEventListener('scroll', () => {
+    const toolbar = document.querySelector('.toolbar');
+    if (window.scrollY > 60) {
+        toolbar.classList.add('compact');
+    } else {
+        toolbar.classList.remove('compact');
+    }
+});

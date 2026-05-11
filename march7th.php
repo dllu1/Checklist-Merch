@@ -11,9 +11,9 @@
     <header>
         <h1>Quản Lý Checklist Merch</h1>
         <nav>
-            <a href="index.php">Tất cả sản phẩm (Trừ March 7th)</a>
+            <a href="index.php">Tất cả sản phẩm</a>
             <a href="march7th.php" class="active">Chỉ March 7th</a>
-        </nav>
+            <a href="dashboard.php">Dashboard</a> </nav>
     </header>
 
     <div class="toolbar">
@@ -43,21 +43,6 @@
                 <option value="so_luong-DESC">Số lượng (Giảm dần)</option>
                 <option value="so_luong-ASC">Số lượng (Tăng dần)</option>
             </select>
-        </div>
-    </div>
-
-    <div class="summary-cards">
-        <div class="card card-total">
-            <h3>Tổng Toàn Bộ</h3>
-            <p id="tong-toan-bo">0 ₫</p>
-        </div>
-        <div class="card card-bought">
-            <h3>Tổng Đã Mua</h3>
-            <p id="tong-da-mua">0 ₫</p>
-        </div>
-        <div class="card card-unbought">
-            <h3>Tổng Chưa Mua</h3>
-            <p id="tong-chua-mua">0 ₫</p>
         </div>
     </div>
 
