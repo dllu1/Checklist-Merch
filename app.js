@@ -132,7 +132,6 @@ async function toggleBuyStatus(id, newStatus) {
 
 function editProduct(id) {
     console.log("Sửa sản phẩm:", id);
-    // Logic mở Modal Form sửa sẽ nằm ở đây
 }
 
 function deleteProduct(id) {

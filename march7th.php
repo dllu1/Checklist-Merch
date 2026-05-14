@@ -9,7 +9,7 @@
 
 <div class="container">
     <header>
-        <h1>Quản Lý Checklist Merch</h1>
+        <h1>Checklist Merch</h1>
         <nav>
             <a href="index.php">Tất cả sản phẩm</a>
             <a href="march7th.php" class="active">Chỉ March 7th</a>

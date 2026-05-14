@@ -39,7 +39,7 @@
 <body>
 <div class="container">
     <header>
-        <h1>Bảng Điều Khiển Tài Chính</h1>
+        <h1>Dashboard</h1>
         <nav>
             <a href="index.php">Tất cả sản phẩm</a>
             <a href="march7th.php">Chỉ March 7th</a>
@@ -94,12 +94,10 @@
             const response = await fetch('api_dashboard.php');
             const data = await response.json();
             if (data.status === 'success') {
-                // Đổ dữ liệu March 7th
                 document.getElementById('m7-total').innerText = formatCurrency(data.march7th.total);
                 document.getElementById('m7-bought').innerText = formatCurrency(data.march7th.bought);
                 document.getElementById('m7-unbought').innerText = formatCurrency(data.march7th.unbought);
 
-                // Đổ dữ liệu Sản phẩm khác
                 document.getElementById('others-total').innerText = formatCurrency(data.others.total);
                 document.getElementById('others-bought').innerText = formatCurrency(data.others.bought);
                 document.getElementById('others-unbought').innerText = formatCurrency(data.others.unbought);
