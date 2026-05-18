@@ -20,6 +20,7 @@ $categoryId = $_GET['category_id'] ?? '';
 $minPrice   = $_GET['min_price']    ?? '';
 $maxPrice   = $_GET['max_price']    ?? '';
 $daMua      = $_GET['da_mua']       ?? '';
+$search     = trim((string)($_GET['search'] ?? ''));
 $sortByRaw  = $_GET['sort_by']      ?? 'ngay_them';
 $orderRaw   = strtoupper($_GET['order'] ?? 'DESC');
 
@@ -48,6 +49,10 @@ if ($maxPrice !== '') {
 if ($daMua !== '') {
     $whereClauses[] = 'da_mua = ?';
     $params[]       = $daMua;
+}
+if ($search !== '') {
+    $whereClauses[] = 'ten_nhan_vat LIKE ?';
+    $params[]       = '%' . $search . '%';
 }
 
 $whereSql = implode(' AND ', $whereClauses);

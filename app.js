@@ -34,6 +34,7 @@ async function loadData() {
     const minPrice   = document.getElementById('min-price').value;
     const maxPrice   = document.getElementById('max-price').value;
     const status     = document.getElementById('filter-status').value;
+    const search     = document.getElementById('search-char')?.value.trim() ?? '';
 
     const sortValue = document.getElementById('sort-by').value;
     const [sortBy, order] = sortValue.split('-');
@@ -44,6 +45,7 @@ async function loadData() {
     url.searchParams.append('min_price', minPrice);
     url.searchParams.append('max_price', maxPrice);
     url.searchParams.append('da_mua', status);
+    url.searchParams.append('search', search);
     url.searchParams.append('sort_by', sortBy);
     url.searchParams.append('order', order);
 
@@ -190,7 +192,6 @@ function openModal(isEdit = false, productData = null) {
         document.getElementById("form-nguoimua").value = productData.nguoi_mua || '';
         document.getElementById("form-glyph").value    = productData.glyph || '✿';
 
-        syncCharChips();
         syncGlyphPicker();
         resetDropZone();
     } else {
@@ -199,11 +200,11 @@ function openModal(isEdit = false, productData = null) {
         saveLbl.textContent   = 'Lưu Dữ Liệu';
         document.getElementById("product-form").reset();
         document.getElementById("form-id").value      = "";
-        document.getElementById("form-nhanvat").value = 'March 7th';
         document.getElementById("form-glyph").value   = '✿';
         document.getElementById("form-soluong").value = 1;
+        // Don't force-set ten_nhan_vat — let the input keep its default value
+        // (empty on index, "March 7th" on the dedicated march7th page).
 
-        syncCharChips();
         syncGlyphPicker();
         resetDropZone();
     }
@@ -222,20 +223,6 @@ function closeModal() {
 
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeModal();
-});
-
-/* ─── Character chips ─── */
-function syncCharChips() {
-    const current = document.getElementById('form-nhanvat').value;
-    document.querySelectorAll('#char-chips .pm-chip').forEach(chip => {
-        chip.setAttribute('data-active', chip.dataset.char === current ? 'true' : 'false');
-    });
-}
-document.addEventListener('click', (e) => {
-    const chip = e.target.closest('#char-chips .pm-chip');
-    if (!chip) return;
-    document.getElementById('form-nhanvat').value = chip.dataset.char;
-    syncCharChips();
 });
 
 /* ─── Glyph picker ─── */
@@ -492,6 +479,29 @@ document.addEventListener('click', (e) => {
     });
     loadData();
 });
+
+/* ─── Realtime character search (debounced AJAX) ─── */
+let searchDebounceTimer = null;
+const searchInput = document.getElementById('search-char');
+const searchClearBtn = document.getElementById('search-clear');
+
+if (searchInput) {
+    searchInput.addEventListener('input', () => {
+        // Toggle clear button visibility
+        if (searchClearBtn) searchClearBtn.hidden = searchInput.value === '';
+        // Debounce so we don't fire on every keystroke — but still feel instant
+        clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = setTimeout(loadData, 250);
+    });
+}
+if (searchClearBtn) {
+    searchClearBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        searchClearBtn.hidden = true;
+        searchInput.focus();
+        loadData();
+    });
+}
 
 /* Sticky-compact toolbar on scroll */
 window.addEventListener('scroll', () => {

@@ -122,15 +122,9 @@ require __DIR__ . '/_layout.php';
                     <select id="form-category" name="category_id" class="pm-input pm-select"></select>
                 </div>
                 <div class="pm-field">
-                    <label class="pm-lbl">Nhân vật</label>
-                    <div class="pm-chips" id="char-chips" role="radiogroup">
-                        <?php foreach (["March 7th", "Kafka", "Yaoguang", "Himeko", "Welt", "Bronya", "Trailblazer", "Khác"] as $c): ?>
-                            <button type="button" class="pm-chip" data-char="<?= htmlspecialchars($c, ENT_QUOTES) ?>" role="radio">
-                                <?= $c === 'March 7th' ? '✿ ' : '' ?><?= htmlspecialchars($c, ENT_QUOTES) ?>
-                            </button>
-                        <?php endforeach; ?>
-                    </div>
-                    <input type="hidden" id="form-nhanvat" name="ten_nhan_vat" value="March 7th">
+                    <label class="pm-lbl" for="form-nhanvat">Nhân vật</label>
+                    <input id="form-nhanvat" name="ten_nhan_vat" class="pm-input" type="text"
+                           placeholder="VD: March 7th, Kafka, Yaoguang…" value="March 7th">
                 </div>
 
                 <div class="pm-field">

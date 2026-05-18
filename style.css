@@ -279,7 +279,6 @@ nav a.active {
 
 /* Cat-bar: smaller chips, horizontal scroll, nowrap */
 .toolbar.compact .cat-bar {
-    margin-top: 8px;
     gap: 5px;
     flex-wrap: nowrap;
     overflow-x: auto;
@@ -368,6 +367,90 @@ nav a.active {
     border-color: var(--pink);
     box-shadow: 0 0 0 4px rgba(255, 126, 176, 0.14);
 }
+
+/* Cat-row: holds quick-access cat-bar + character search side-by-side */
+.cat-row {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 14px;
+}
+.cat-row .cat-bar {
+    flex: 1;
+    margin-top: 0;
+    min-width: 0;
+    grid-column: auto;
+}
+.cat-row .search-bar {
+    flex: 0 0 260px;
+    margin-top: 0;
+    grid-column: auto;
+}
+@media (max-width: 880px) {
+    .cat-row { flex-direction: column; align-items: stretch; }
+    .cat-row .search-bar { flex: 1 1 auto; width: 100%; }
+}
+
+/* Realtime search bar — searches by character name (ten_nhan_vat) */
+.search-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.78);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 8px 14px;
+    transition: border-color 200ms, box-shadow 200ms, background 200ms;
+}
+.search-bar:focus-within {
+    border-color: var(--pink);
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(255, 126, 176, 0.14);
+}
+.search-ic {
+    color: var(--lav-deep);
+    flex-shrink: 0;
+}
+.search-input {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    flex: 1;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: var(--ink-1);
+    outline: none;
+    padding: 0;
+    min-width: 0;
+}
+.search-input::placeholder { color: var(--ink-3); }
+.search-clear {
+    appearance: none;
+    width: 24px; height: 24px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255, 126, 176, 0.15);
+    color: var(--pink-deep);
+    cursor: pointer;
+    font-size: 11px;
+    line-height: 1;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: background 160ms, transform 160ms;
+}
+.search-clear:hover { background: rgba(255, 126, 176, 0.28); transform: scale(1.08); }
+
+/* Compact (stuck) variant: smaller pill */
+.toolbar.compact .cat-row { margin-top: 8px; gap: 8px; }
+.toolbar.compact .search-bar {
+    padding: 5px 11px;
+    gap: 6px;
+    flex: 0 0 220px;
+}
+.toolbar.compact .search-input { font-size: 11.5px; }
+.toolbar.compact .search-ic { width: 13px; height: 13px; }
+.toolbar.compact .search-clear { width: 20px; height: 20px; font-size: 10px; }
 
 /* Quick-access category chip bar */
 .cat-bar {

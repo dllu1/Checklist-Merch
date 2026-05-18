@@ -47,8 +47,18 @@ require __DIR__ . '/_layout.php';
             </select>
         </div>
 
-        <div class="cat-bar" id="cat-bar" role="tablist" aria-label="Lọc nhanh theo danh mục">
-            <button type="button" class="cat-chip" data-cat="" data-active="true">✦ Tất cả <span class="num" id="cat-count-all">0</span></button>
+        <div class="cat-row">
+            <div class="cat-bar" id="cat-bar" role="tablist" aria-label="Lọc nhanh theo danh mục">
+                <button type="button" class="cat-chip" data-cat="" data-active="true">✦ Tất cả <span class="num" id="cat-count-all">0</span></button>
+            </div>
+            <div class="search-bar">
+                <svg class="search-ic" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/>
+                    <path d="M20 20 L16 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+                <input type="text" id="search-char" class="search-input" placeholder="Tìm nhân vật…" autocomplete="off">
+                <button type="button" class="search-clear" id="search-clear" aria-label="Xoá tìm kiếm" hidden>✕</button>
+            </div>
         </div>
     </div>
 
@@ -125,15 +135,9 @@ require __DIR__ . '/_layout.php';
                     <select id="form-category" name="category_id" class="pm-input pm-select"></select>
                 </div>
                 <div class="pm-field">
-                    <label class="pm-lbl">Nhân vật</label>
-                    <div class="pm-chips" id="char-chips" role="radiogroup">
-                        <?php foreach (["March 7th", "Kafka", "Yaoguang", "Himeko", "Welt", "Bronya", "Trailblazer", "Khác"] as $c): ?>
-                            <button type="button" class="pm-chip" data-char="<?= htmlspecialchars($c, ENT_QUOTES) ?>" role="radio">
-                                <?= $c === 'March 7th' ? '✿ ' : '' ?><?= htmlspecialchars($c, ENT_QUOTES) ?>
-                            </button>
-                        <?php endforeach; ?>
-                    </div>
-                    <input type="hidden" id="form-nhanvat" name="ten_nhan_vat" value="March 7th">
+                    <label class="pm-lbl" for="form-nhanvat">Nhân vật</label>
+                    <input id="form-nhanvat" name="ten_nhan_vat" class="pm-input" type="text"
+                           placeholder="VD: March 7th, Kafka, Yaoguang…">
                 </div>
 
                 <!-- Shop + Người mua -->
