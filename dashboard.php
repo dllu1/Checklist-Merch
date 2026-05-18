@@ -223,5 +223,6 @@ require __DIR__ . '/_layout.php';
 </script>
 
 <?php require __DIR__ . '/music_player.php'; ?>
+<?php require __DIR__ . '/background_picker.php'; ?>
 </body>
 </html>
