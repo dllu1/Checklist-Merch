@@ -244,26 +244,47 @@ $tracks = array_map(static function (string $path): array {
     .mp-controls {
         display: flex;
         align-items: center;
-        gap: 10px;
+        justify-content: center;
+        gap: 8px;
         padding-top: 4px;
     }
     .mp-btn {
         appearance: none;
-        width: 36px; height: 36px;
+        width: 32px; height: 32px;
         border: 1px solid rgba(122, 104, 184, 0.14);
         border-radius: 50%;
         background: rgba(255, 255, 255, 0.6);
         color: #7a68b8;
         cursor: pointer;
         display: inline-flex; align-items: center; justify-content: center;
-        transition: transform 160ms, background 160ms;
-        font-size: 14px;
+        transition: transform 160ms, background 160ms, color 160ms, border-color 160ms;
+        font-size: 13px;
         padding: 0;
+        position: relative;
     }
     .mp-btn:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.9); }
     .mp-btn:active { transform: translateY(0); }
+    .mp-btn[data-active="true"] {
+        background: linear-gradient(135deg, rgba(255, 126, 176, 0.22), rgba(111, 199, 255, 0.22));
+        border-color: rgba(255, 126, 176, 0.45);
+        color: #d94f86;
+        box-shadow: 0 4px 12px -4px rgba(217, 79, 134, 0.3), inset 0 1px 0 rgba(255,255,255,0.5);
+    }
+    .mp-btn-badge {
+        position: absolute;
+        right: -3px; top: -3px;
+        background: linear-gradient(135deg, #ff7eb0, #6fc7ff);
+        color: #fff;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 8px;
+        font-weight: 700;
+        line-height: 1;
+        padding: 2px 4px;
+        border-radius: 999px;
+        box-shadow: 0 2px 4px rgba(217, 79, 134, 0.35);
+    }
     .mp-play {
-        width: 44px; height: 44px;
+        width: 42px; height: 42px;
         background: linear-gradient(135deg, #ff7eb0 0%, #b3a3e8 60%, #6fc7ff 100%);
         color: #fff;
         border: 0;
@@ -272,6 +293,17 @@ $tracks = array_map(static function (string $path): array {
     }
     .mp-play:hover { transform: translateY(-2px) scale(1.05); }
 
+    .mp-volume-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding-top: 8px;
+    }
+    .mp-volume-ic {
+        color: #9e8ec0;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
     .mp-volume {
         flex: 1;
         -webkit-appearance: none;
@@ -281,8 +313,6 @@ $tracks = array_map(static function (string $path): array {
         background: rgba(179, 163, 232, 0.18);
         outline: none;
         cursor: pointer;
-        max-width: 100px;
-        margin-left: 4px;
     }
     .mp-volume::-webkit-slider-thumb {
         -webkit-appearance: none;
@@ -338,9 +368,14 @@ $tracks = array_map(static function (string $path): array {
         </div>
 
         <div class="mp-controls">
+            <button type="button" class="mp-btn" id="mp-shuffle" title="Xáo trộn" aria-label="Xáo trộn">⇄</button>
             <button type="button" class="mp-btn" id="mp-prev" title="Bài trước" aria-label="Bài trước">⏮</button>
             <button type="button" class="mp-btn mp-play" id="mp-play" title="Phát / Tạm dừng" aria-label="Phát hoặc tạm dừng">▶</button>
             <button type="button" class="mp-btn" id="mp-next" title="Bài sau" aria-label="Bài sau">⏭</button>
+            <button type="button" class="mp-btn" id="mp-loop" title="Lặp lại" aria-label="Lặp lại">↻</button>
+        </div>
+        <div class="mp-volume-row">
+            <span class="mp-volume-ic" aria-hidden="true">🔉</span>
             <input type="range" class="mp-volume" id="mp-volume" min="0" max="1" step="0.05" value="0.5" title="Âm lượng" aria-label="Âm lượng">
         </div>
     <?php endif; ?>
@@ -360,23 +395,27 @@ $tracks = array_map(static function (string $path): array {
     const audio   = new Audio();
     audio.preload = 'metadata';
 
-    const fab      = document.getElementById('mp-fab');
-    const fabInner = document.getElementById('mp-fab-inner');
-    const card     = document.getElementById('mp-card');
-    const closeBtn = document.getElementById('mp-close');
-    const playBtn  = document.getElementById('mp-play');
-    const prevBtn  = document.getElementById('mp-prev');
-    const nextBtn  = document.getElementById('mp-next');
-    const volume   = document.getElementById('mp-volume');
-    const seek     = document.getElementById('mp-seek');
-    const titleEl  = document.getElementById('mp-title');
-    const timeCur  = document.getElementById('mp-time-cur');
-    const timeDur  = document.getElementById('mp-time-dur');
-    const disc     = document.getElementById('mp-disc');
+    const fab        = document.getElementById('mp-fab');
+    const fabInner   = document.getElementById('mp-fab-inner');
+    const card       = document.getElementById('mp-card');
+    const closeBtn   = document.getElementById('mp-close');
+    const playBtn    = document.getElementById('mp-play');
+    const prevBtn    = document.getElementById('mp-prev');
+    const nextBtn    = document.getElementById('mp-next');
+    const shuffleBtn = document.getElementById('mp-shuffle');
+    const loopBtn    = document.getElementById('mp-loop');
+    const volume     = document.getElementById('mp-volume');
+    const seek       = document.getElementById('mp-seek');
+    const titleEl    = document.getElementById('mp-title');
+    const timeCur    = document.getElementById('mp-time-cur');
+    const timeDur    = document.getElementById('mp-time-dur');
+    const disc       = document.getElementById('mp-disc');
 
     const state = JSON.parse(sessionStorage.getItem(STORAGE_KEY) ?? '{}');
     let index     = Math.min(state.index ?? 0, tracks.length - 1);
     let playing   = state.playing ?? true;
+    let shuffle   = state.shuffle ?? false;
+    let loopMode  = state.loopMode ?? 'off'; // 'off' | 'all' | 'one'
     let isSeeking = false;
 
     audio.volume = state.volume ?? 0.5;
@@ -386,9 +425,27 @@ $tracks = array_map(static function (string $path): array {
         sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
             index,
             playing,
+            shuffle,
+            loopMode,
             volume:      audio.volume,
             currentTime: audio.currentTime,
         }));
+    };
+
+    const pickRandomIdx = () => {
+        if (tracks.length <= 1) return index;
+        let n;
+        do { n = Math.floor(Math.random() * tracks.length); } while (n === index);
+        return n;
+    };
+
+    const renderModeButtons = () => {
+        shuffleBtn.setAttribute('data-active', shuffle ? 'true' : 'false');
+        loopBtn.setAttribute('data-active', loopMode === 'off' ? 'false' : 'true');
+        // Show "1" badge on loop button when in 'one' mode
+        loopBtn.innerHTML = loopMode === 'one'
+            ? '↻<span class="mp-btn-badge">1</span>'
+            : '↻';
     };
 
     const fmt = (s) => {
@@ -433,14 +490,31 @@ $tracks = array_map(static function (string $path): array {
 
     playBtn.addEventListener('click', () => (playing ? pause() : play()));
     prevBtn.addEventListener('click', () => {
-        index = (index - 1 + tracks.length) % tracks.length;
+        // If more than 3s into the song, restart it (typical player behavior).
+        // Otherwise go to previous track (respecting shuffle).
+        if (audio.currentTime > 3) {
+            audio.currentTime = 0;
+            persist();
+            return;
+        }
+        index = shuffle ? pickRandomIdx() : (index - 1 + tracks.length) % tracks.length;
         loadTrack();
         if (playing) play(); else persist();
     });
     nextBtn.addEventListener('click', () => {
-        index = (index + 1) % tracks.length;
+        index = shuffle ? pickRandomIdx() : (index + 1) % tracks.length;
         loadTrack();
         if (playing) play(); else persist();
+    });
+    shuffleBtn.addEventListener('click', () => {
+        shuffle = !shuffle;
+        renderModeButtons();
+        persist();
+    });
+    loopBtn.addEventListener('click', () => {
+        loopMode = loopMode === 'off' ? 'all' : loopMode === 'all' ? 'one' : 'off';
+        renderModeButtons();
+        persist();
     });
     volume.addEventListener('input', () => {
         audio.volume = Number(volume.value);
@@ -460,7 +534,26 @@ $tracks = array_map(static function (string $path): array {
     });
 
     audio.addEventListener('ended', () => {
-        index = (index + 1) % tracks.length;
+        if (loopMode === 'one') {
+            audio.currentTime = 0;
+            play();
+            return;
+        }
+        if (shuffle) {
+            index = pickRandomIdx();
+            loadTrack();
+            play();
+            return;
+        }
+        const nextIdx = (index + 1) % tracks.length;
+        // If we've looped back to the start and loop mode is 'off', stop.
+        if (nextIdx === 0 && loopMode === 'off' && tracks.length > 1) {
+            index = nextIdx;
+            loadTrack();
+            pause();
+            return;
+        }
+        index = nextIdx;
         loadTrack();
         play();
     });
@@ -480,6 +573,7 @@ $tracks = array_map(static function (string $path): array {
 
     loadTrack(state.currentTime ?? 0);
     renderState();
+    renderModeButtons();
 
     // Auto-play on page load. Browsers may block until first user interaction —
     // in that case, attach one-shot listeners that try again on first input.
