@@ -137,7 +137,7 @@ require __DIR__ . '/_layout.php';
                 <div class="pm-field">
                     <label class="pm-lbl" for="form-nhanvat">Nhân vật</label>
                     <input id="form-nhanvat" name="ten_nhan_vat" class="pm-input" type="text"
-                           placeholder="VD: March 7th, Kafka, Yaoguang…">
+                           placeholder="VD: March 7th, Evernight, Kafka, Yaoguang…">
                 </div>
 
                 <!-- Shop + Người mua -->

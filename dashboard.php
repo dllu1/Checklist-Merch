@@ -15,12 +15,12 @@ require __DIR__ . '/_layout.php';
 <?php render_bg(); ?>
 
 <div class="container">
-    <?php render_hero('dash', 'Dashboard', 'Tổng quan ngân sách merch — chia thành <em>March 7th</em> và các nhân vật khác. Theo dõi đã chi, còn lại, và tổng cộng.'); ?>
+    <?php render_hero('dash', 'Dashboard', 'Tổng quan ngân sách merch — chia thành nhóm <em>March 7th &amp; Evernight</em> và các nhân vật khác. Theo dõi đã chi, còn lại, và tổng cộng.'); ?>
 
     <div class="dash">
         <!-- March 7th column -->
         <div class="dash-col march">
-            <h3><span class="badge">✿</span> March 7th</h3>
+            <h3><span class="badge">✿</span> March 7th &amp; Evernight</h3>
             <div class="stat-grid">
                 <div class="stat stat-total pink">
                     <div class="stat-bg" aria-hidden="true">

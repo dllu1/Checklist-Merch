@@ -15,7 +15,7 @@ require __DIR__ . '/_layout.php';
 <?php render_bg(); ?>
 
 <div class="container">
-    <?php render_hero('march', 'March 7th', 'Bộ sưu tập riêng cho <em>March 7th</em> — từ standee, sticker đến figure limited. Mỗi món là một mảnh ký ức của Astral Express.'); ?>
+    <?php render_hero('march', 'March 7th', 'Bộ sưu tập riêng cho <em>March 7th</em> &amp; <em>Evernight</em> — từ standee, sticker đến figure limited. Mỗi món là một mảnh ký ức của Astral Express.'); ?>
 
     <div class="toolbar-sentinel" aria-hidden="true"></div>
     <div class="toolbar">
@@ -124,7 +124,7 @@ require __DIR__ . '/_layout.php';
                 <div class="pm-field">
                     <label class="pm-lbl" for="form-nhanvat">Nhân vật</label>
                     <input id="form-nhanvat" name="ten_nhan_vat" class="pm-input" type="text"
-                           placeholder="VD: March 7th, Kafka, Yaoguang…" value="March 7th">
+                           placeholder="VD: March 7th, Evernight…" value="March 7th">
                 </div>
 
                 <div class="pm-field">

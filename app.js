@@ -1,6 +1,12 @@
 const currentPath = window.location.pathname;
 const isMarch7thPage = currentPath.includes('march7th.php') ? 1 : 0;
 
+// Characters that share the March 7th group (filter scope + dashboard column).
+const MARCH_GROUP = ['march 7th', 'evernight'];
+function isInMarchGroup(name) {
+    return MARCH_GROUP.includes((name || '').trim().toLowerCase());
+}
+
 let CATEGORIES = []; // populated by loadCategories()
 let CAT_COUNTS = {}; // { category_id: count }
 
@@ -87,7 +93,7 @@ function renderProducts(products) {
 
         const isBought   = p.da_mua == 1;
         const nextStatus = isBought ? 0 : 1;
-        const isMarch    = (p.ten_nhan_vat || '').trim().toLowerCase() === 'march 7th';
+        const isMarch    = isInMarchGroup(p.ten_nhan_vat);
 
         const cardClasses = ['product-card'];
         if (isBought) cardClasses.push('status-bought');
@@ -106,7 +112,7 @@ function renderProducts(products) {
             ? `<span><span class="k">Nhân vật</span><b>${escapeHtml(p.ten_nhan_vat)}</b></span>` : '';
         const nguoiMuaTag = `<span><span class="k">Người mua</span><b>${escapeHtml(p.nguoi_mua || 'Chưa có')}</b></span>`;
 
-        const marchTag = isMarch ? ' <span class="march-tag">✿ March 7th</span>' : '';
+        const marchTag = isMarch ? ` <span class="march-tag">✿ ${escapeHtml(p.ten_nhan_vat)}</span>` : '';
 
         const tongTienSanPham = p.gia * p.so_luong;
 

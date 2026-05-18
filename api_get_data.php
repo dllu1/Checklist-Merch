@@ -27,10 +27,11 @@ $orderRaw   = strtoupper($_GET['order'] ?? 'DESC');
 $sortBy = in_array($sortByRaw, ALLOWED_SORT_COLUMNS, true) ? $sortByRaw : 'ngay_them';
 $order  = in_array($orderRaw, ALLOWED_ORDERS, true) ? $orderRaw : 'DESC';
 
+// March 7th group also includes "Evernight" — they share filters & dashboard column.
 $whereClauses = [
     $isMarch7th
-        ? "ten_nhan_vat = 'March 7th'"
-        : "(ten_nhan_vat != 'March 7th' OR ten_nhan_vat IS NULL)",
+        ? "ten_nhan_vat IN ('March 7th', 'Evernight')"
+        : "(ten_nhan_vat NOT IN ('March 7th', 'Evernight') OR ten_nhan_vat IS NULL)",
 ];
 $params = [];
 

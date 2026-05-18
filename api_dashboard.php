@@ -6,6 +6,7 @@ require __DIR__ . '/db.php';
 try {
     $pdo = db();
 
+    // March 7th group also includes "Evernight"; the two share a dashboard column.
     $summarySql = <<<SQL
         SELECT
             COALESCE(SUM(gia * so_luong), 0)                                       AS total,
@@ -15,11 +16,10 @@ try {
             COALESCE(SUM(so_luong), 0)                                             AS qty,
             COALESCE(SUM(CASE WHEN da_mua = 1 THEN 1 ELSE 0 END), 0)               AS done_count
         FROM products
-        WHERE ten_nhan_vat
     SQL;
 
-    $march7th = $pdo->query("$summarySql = 'March 7th'")->fetch();
-    $others   = $pdo->query("$summarySql != 'March 7th' OR ten_nhan_vat IS NULL")->fetch();
+    $march7th = $pdo->query("$summarySql WHERE ten_nhan_vat IN ('March 7th', 'Evernight')")->fetch();
+    $others   = $pdo->query("$summarySql WHERE (ten_nhan_vat NOT IN ('March 7th', 'Evernight') OR ten_nhan_vat IS NULL)")->fetch();
 
     // Recent activity — 5 latest products with category name
     $recentSql = <<<SQL
