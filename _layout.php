@@ -99,7 +99,7 @@ function render_hero(string $active, string $title, string $subtitle): void
         <p class="subtitle"><?= $subtitle ?></p>
         <nav>
             <a href="index.php"<?= $active === 'all' ? ' class="active"' : '' ?>>✦ Tất cả sản phẩm</a>
-            <a href="march7th.php"<?= $active === 'march' ? ' class="active"' : '' ?>>✿ Chỉ March 7th</a>
+            <a href="march7th.php"<?= $active === 'march' ? ' class="active"' : '' ?>>✿ March 7th/Evernight</a>
             <a href="dashboard.php"<?= $active === 'dash' ? ' class="active"' : '' ?>>❄ Dashboard</a>
         </nav>
         <div class="hero-meta">Astral Express · <?= $today ?></div>
