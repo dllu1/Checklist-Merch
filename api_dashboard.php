@@ -1,33 +1,43 @@
 <?php
-// api_dashboard.php
-header('Content-Type: application/json; charset=utf-8');
+declare(strict_types=1);
+
+require __DIR__ . '/db.php';
+
 try {
-    $pdo = new PDO("mysql:host=127.0.0.1;dbname=shop_db;charset=utf8mb4", "root", "", [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+    $pdo = db();
 
-    // 1. Tính toán cho mục March 7th
-    $sqlM7 = "SELECT 
-                SUM(gia * so_luong) AS total,
-                SUM(CASE WHEN da_mua = 1 THEN gia * so_luong ELSE 0 END) AS bought,
-                SUM(CASE WHEN da_mua = 0 THEN gia * so_luong ELSE 0 END) AS unbought
-              FROM products WHERE ten_nhan_vat = 'March 7th'";
-    $stmtM7 = $pdo->query($sqlM7);
-    $dataM7 = $stmtM7->fetch(PDO::FETCH_ASSOC);
+    $summarySql = <<<SQL
+        SELECT
+            COALESCE(SUM(gia * so_luong), 0)                                       AS total,
+            COALESCE(SUM(CASE WHEN da_mua = 1 THEN gia * so_luong ELSE 0 END), 0)  AS bought,
+            COALESCE(SUM(CASE WHEN da_mua = 0 THEN gia * so_luong ELSE 0 END), 0)  AS unbought,
+            COUNT(*)                                                               AS count,
+            COALESCE(SUM(so_luong), 0)                                             AS qty,
+            COALESCE(SUM(CASE WHEN da_mua = 1 THEN 1 ELSE 0 END), 0)               AS done_count
+        FROM products
+        WHERE ten_nhan_vat
+    SQL;
 
-    // 2. Tính toán cho các mục còn lại
-    $sqlOthers = "SELECT 
-                    SUM(gia * so_luong) AS total,
-                    SUM(CASE WHEN da_mua = 1 THEN gia * so_luong ELSE 0 END) AS bought,
-                    SUM(CASE WHEN da_mua = 0 THEN gia * so_luong ELSE 0 END) AS unbought
-                  FROM products WHERE ten_nhan_vat != 'March 7th' OR ten_nhan_vat IS NULL";
-    $stmtOthers = $pdo->query($sqlOthers);
-    $dataOthers = $stmtOthers->fetch(PDO::FETCH_ASSOC);
+    $march7th = $pdo->query("$summarySql = 'March 7th'")->fetch();
+    $others   = $pdo->query("$summarySql != 'March 7th' OR ten_nhan_vat IS NULL")->fetch();
 
-    echo json_encode([
-        'status' => 'success',
-        'march7th' => $dataM7,
-        'others' => $dataOthers
+    // Recent activity — 5 latest products with category name
+    $recentSql = <<<SQL
+        SELECT p.id, p.ten_san_pham, p.gia, p.so_luong, p.da_mua, p.ten_nhan_vat,
+               p.shop_ban, p.ngay_them, c.ten_danh_muc
+        FROM products p
+        LEFT JOIN categories c ON c.id = p.category_id
+        ORDER BY p.ngay_them DESC, p.id DESC
+        LIMIT 5
+    SQL;
+    $recent = $pdo->query($recentSql)->fetchAll();
+
+    json_response([
+        'status'   => 'success',
+        'march7th' => $march7th,
+        'others'   => $others,
+        'recent'   => $recent,
     ]);
-} catch (Exception $e) {
-    echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+} catch (Throwable $e) {
+    json_error($e->getMessage(), 500);
 }
-?>

@@ -1,59 +1,62 @@
 <?php
-ini_set('display_errors', 0);
-header('Content-Type: application/json; charset=utf-8');
+declare(strict_types=1);
+
+require __DIR__ . '/db.php';
+
+ini_set('display_errors', '0');
+
+const IMAGE_DIR = __DIR__ . '/images';
+
+function save_uploaded_image(): string
+{
+    $file = $_FILES['hinh_san_pham'] ?? null;
+    if (!$file || $file['error'] !== UPLOAD_ERR_OK) {
+        return '';
+    }
+
+    if (!is_dir(IMAGE_DIR) && !mkdir(IMAGE_DIR, 0777, true) && !is_dir(IMAGE_DIR)) {
+        throw new RuntimeException('Không tạo được thư mục images');
+    }
+
+    $safeName = basename($file['name']);
+    $newName  = time() . '_' . $safeName;
+    $target   = IMAGE_DIR . '/' . $newName;
+
+    if (!move_uploaded_file($file['tmp_name'], $target)) {
+        throw new RuntimeException('Không lưu được file ảnh');
+    }
+
+    return 'images/' . $newName;
+}
 
 try {
-    $pdo = new PDO("mysql:host=127.0.0.1;dbname=shop_db;charset=utf8mb4", "root", "", [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_EMULATE_PREPARES => false // Giúp PDO bắt lỗi kiểu dữ liệu nghiêm ngặt hơn
-    ]);
+    $pdo = db();
 
-    $id = isset($_POST['id']) ? $_POST['id'] : '';
-    $ten = isset($_POST['ten_san_pham']) ? $_POST['ten_san_pham'] : '';
+    $id          = isset($_POST['id']) && $_POST['id'] !== '' ? (int) $_POST['id'] : 0;
+    $ten         = trim((string) ($_POST['ten_san_pham'] ?? ''));
+    $gia         = (float) str_replace(',', '.', (string) ($_POST['gia'] ?? '0'));
+    $soluong     = max(1, (int) ($_POST['so_luong'] ?? 1));
+    $categoryId  = !empty($_POST['category_id']) ? (int) $_POST['category_id'] : null;
+    $nhanvat     = trim((string) ($_POST['ten_nhan_vat'] ?? ''));
+    $shop        = trim((string) ($_POST['shop_ban']     ?? ''));
+    $nguoiMua    = trim((string) ($_POST['nguoi_mua']    ?? ''));
+    $hinhPath    = save_uploaded_image();
 
-    $giaRaw = isset($_POST['gia']) ? $_POST['gia'] : 0;
-    $gia = str_replace(',', '.', $giaRaw);
+    match (true) {
+        $id > 0 && $hinhPath !== '' => $pdo
+            ->prepare('UPDATE products SET ten_san_pham=?, gia=?, so_luong=?, category_id=?, ten_nhan_vat=?, shop_ban=?, nguoi_mua=?, hinh_san_pham=? WHERE id=?')
+            ->execute([$ten, $gia, $soluong, $categoryId, $nhanvat, $shop, $nguoiMua, $hinhPath, $id]),
 
-    $soluong = (!empty($_POST['so_luong'])) ? $_POST['so_luong'] : 1;
+        $id > 0 => $pdo
+            ->prepare('UPDATE products SET ten_san_pham=?, gia=?, so_luong=?, category_id=?, ten_nhan_vat=?, shop_ban=?, nguoi_mua=? WHERE id=?')
+            ->execute([$ten, $gia, $soluong, $categoryId, $nhanvat, $shop, $nguoiMua, $id]),
 
-    $category_id = (!empty($_POST['category_id'])) ? $_POST['category_id'] : null;
+        default => $pdo
+            ->prepare('INSERT INTO products (ten_san_pham, gia, so_luong, category_id, ten_nhan_vat, shop_ban, nguoi_mua, hinh_san_pham, da_mua) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)')
+            ->execute([$ten, $gia, $soluong, $categoryId, $nhanvat, $shop, $nguoiMua, $hinhPath]),
+    };
 
-    $nhanvat = isset($_POST['ten_nhan_vat']) ? $_POST['ten_nhan_vat'] : '';
-    $shop = isset($_POST['shop_ban']) ? $_POST['shop_ban'] : '';
-    $nguoi_mua = isset($_POST['nguoi_mua']) ? $_POST['nguoi_mua'] : '';
-
-    $hinh_path = "";
-    if (isset($_FILES['hinh_san_pham']) && $_FILES['hinh_san_pham']['error'] === UPLOAD_ERR_OK) {
-        if (!is_dir('images')) if (!mkdir('images', 0777, true) && !is_dir('images')) {
-            throw new \RuntimeException(sprintf('Directory "%s" was not created', 'images'));
-        }
-        $tmp_name = $_FILES['hinh_san_pham']['tmp_name'];
-        $name = basename($_FILES['hinh_san_pham']['name']);
-        $new_name = time() . "_" . $name;
-        move_uploaded_file($tmp_name, "images/" . $new_name);
-        $hinh_path = "images/" . $new_name;
-    }
-
-    if ($id) {
-        if ($hinh_path) {
-            $sql = "UPDATE products SET ten_san_pham=?, gia=?, so_luong=?, category_id=?, ten_nhan_vat=?, shop_ban=?, nguoi_mua=?, hinh_san_pham=? WHERE id=?";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$ten, $gia, $soluong, $category_id, $nhanvat, $shop, $nguoi_mua, $hinh_path, $id]);
-        } else {
-            $sql = "UPDATE products SET ten_san_pham=?, gia=?, so_luong=?, category_id=?, ten_nhan_vat=?, shop_ban=?, nguoi_mua=? WHERE id=?";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$ten, $gia, $soluong, $category_id, $nhanvat, $shop, $nguoi_mua, $id]);
-        }
-    } else {
-        $sql = "INSERT INTO products (ten_san_pham, gia, so_luong, category_id, ten_nhan_vat, shop_ban, nguoi_mua, hinh_san_pham, da_mua) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([$ten, $gia, $soluong, $category_id, $nhanvat, $shop, $nguoi_mua, $hinh_path]);
-    }
-
-
-    echo json_encode(['status' => 'success']);
-
-} catch (Exception $e) {
-    echo json_encode(['status' => 'error', 'message' => 'Lỗi Database: ' . $e->getMessage()]);
+    json_response(['status' => 'success']);
+} catch (Throwable $e) {
+    json_error('Lỗi Database: ' . $e->getMessage(), 500);
 }
-?>

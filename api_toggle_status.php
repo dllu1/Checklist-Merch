@@ -1,18 +1,22 @@
 <?php
-header('Content-Type: application/json; charset=utf-8');
-$data = json_decode(file_get_contents('php://input'), true);
+declare(strict_types=1);
 
-if (isset($data['id']) && isset($data['da_mua'])) {
-    try {
-        $pdo = new PDO("mysql:host=127.0.0.1;dbname=shop_db;charset=utf8mb4", "root", "", [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
-        $sql = "UPDATE products SET da_mua = ? WHERE id = ?";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([$data['da_mua'], $data['id']]);
-        echo json_encode(['status' => 'success']);
-    } catch (PDOException $e) {
-        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+require __DIR__ . '/db.php';
+
+try {
+    $data = json_decode(file_get_contents('php://input') ?: '', true, flags: JSON_THROW_ON_ERROR);
+
+    $id     = (int) ($data['id']     ?? 0);
+    $daMua  = isset($data['da_mua']) ? (int) $data['da_mua'] : null;
+
+    if ($id <= 0 || $daMua === null) {
+        json_error('Thiếu dữ liệu ID hoặc Trạng thái');
     }
-} else {
-    echo json_encode(['status' => 'error', 'message' => 'Thiếu dữ liệu ID hoặc Trạng thái']);
+
+    $stmt = db()->prepare('UPDATE products SET da_mua = ? WHERE id = ?');
+    $stmt->execute([$daMua, $id]);
+
+    json_response(['status' => 'success']);
+} catch (Throwable $e) {
+    json_error($e->getMessage(), 500);
 }
-?>
