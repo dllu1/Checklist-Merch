@@ -9,8 +9,16 @@ export const PRODUCT_IMAGE_RULES = {
 export const AUDIO_FILE_RULES = {
     label: 'audio file',
     maxSize: 25 * 1024 * 1024,
-    extensions: ['mp3', 'm4a', 'ogg', 'wav'],
-    mimeTypes: ['audio/mpeg', 'audio/mp4', 'audio/ogg', 'audio/wav', 'audio/x-wav'],
+    extensions: ['mp3', 'm4a', 'mp4', 'aac', 'ogg', 'oga', 'opus', 'wav', 'webm', 'flac'],
+    mimeTypes: [
+        'audio/mpeg', 'audio/mp3',
+        'audio/mp4', 'audio/x-m4a', 'audio/m4a', 'audio/aac', 'audio/x-aac', 'audio/mp4a-latm',
+        'audio/ogg', 'audio/vorbis', 'audio/opus',
+        'audio/wav', 'audio/x-wav', 'audio/wave',
+        'audio/webm',
+        'audio/flac', 'audio/x-flac',
+        '',
+    ],
     requireMagicBytes: false,
 };
 

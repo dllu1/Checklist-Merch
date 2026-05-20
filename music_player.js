@@ -12,7 +12,7 @@ import {
 } from './storage_files.js';
 
 const AUDIO_BUCKET = 'audio';
-const AUDIO_EXTENSIONS = ['mp3', 'm4a', 'ogg', 'wav'];
+const AUDIO_EXTENSIONS = ['mp3', 'm4a', 'mp4', 'aac', 'ogg', 'oga', 'opus', 'wav', 'webm', 'flac'];
 const AUDIO_UPLOAD_FOLDER = 'tracks';
 const RESUMABLE_UPLOAD_HINT_SIZE = 6 * 1024 * 1024;
 

@@ -419,7 +419,7 @@
         <div class="mp-upload">
             <button type="button" class="mp-upload-btn" id="mp-upload-btn">+ Thêm nhạc</button>
             <div class="mp-upload-status" id="mp-upload-status" aria-live="polite"></div>
-            <input type="file" id="mp-upload-input" accept="audio/mpeg,audio/mp4,audio/ogg,audio/wav,.mp3,.m4a,.ogg,.wav" hidden>
+            <input type="file" id="mp-upload-input" accept="audio/*,.mp3,.m4a,.mp4,.aac,.ogg,.oga,.opus,.wav,.webm,.flac" hidden>
         </div>
     </div>
 </div>
