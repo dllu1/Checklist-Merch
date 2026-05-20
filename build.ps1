@@ -28,6 +28,7 @@ $assets = @(
     'app.js',
     'dashboard.js',
     'music_player.js',
+    'soft_nav.js',
     'storage_files.js',
     'supabase_client.js',
     'supabase-config.js'

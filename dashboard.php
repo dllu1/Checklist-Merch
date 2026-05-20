@@ -138,7 +138,11 @@ require __DIR__ . '/_layout.php';
 </div>
 
 <script src="supabase-config.js"></script>
-<script type="module" src="dashboard.js"></script>
+<script type="module">
+    import { initDashboard } from './dashboard.js';
+    import './soft_nav.js';
+    initDashboard();
+</script>
 <?php require __DIR__ . '/music_player.php'; ?>
 </body>
 </html>

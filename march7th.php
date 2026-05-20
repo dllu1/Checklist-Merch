@@ -195,6 +195,10 @@ require __DIR__ . '/_layout.php';
 
 <script src="supabase-config.js"></script>
 <?php require __DIR__ . '/music_player.php'; ?>
-<script type="module" src="app.js"></script>
+<script type="module">
+    import { initApp } from './app.js';
+    import './soft_nav.js';
+    initApp();
+</script>
 </body>
 </html>

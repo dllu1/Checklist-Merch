@@ -85,7 +85,7 @@ function renderRecent(items) {
     }).join('');
 }
 
-async function loadDashboard() {
+export async function initDashboard() {
     if (!SUPABASE_CONFIGURED) {
         renderRecent([]);
         return;
@@ -94,20 +94,21 @@ async function loadDashboard() {
     const session = await requireSession();
     if (!session) return;
 
-    const products = await fetchProducts();
-    const march7th = products.filter(p => isInMarchGroup(p.ten_nhan_vat));
-    const others = products.filter(p => !isInMarchGroup(p.ten_nhan_vat));
-    const recent = [...products]
-        .sort((a, b) => String(b.ngay_them || '').localeCompare(String(a.ngay_them || '')) || Number(b.id || 0) - Number(a.id || 0))
-        .slice(0, 5);
+    try {
+        const products = await fetchProducts();
+        const march7th = products.filter(p => isInMarchGroup(p.ten_nhan_vat));
+        const others = products.filter(p => !isInMarchGroup(p.ten_nhan_vat));
+        const recent = [...products]
+            .sort((a, b) => String(b.ngay_them || '').localeCompare(String(a.ngay_them || '')) || Number(b.id || 0) - Number(a.id || 0))
+            .slice(0, 5);
 
-    fillGroup('m7', summarize(march7th));
-    fillGroup('others', summarize(others));
-    renderRecent(recent);
+        fillGroup('m7', summarize(march7th));
+        fillGroup('others', summarize(others));
+        renderRecent(recent);
+    } catch (error) {
+        console.error('Lỗi tải dashboard:', error);
+        renderRecent([]);
+    }
 }
 
 window.signOutAndRedirect = signOutAndRedirect;
-loadDashboard().catch(error => {
-    console.error('Lỗi tải dashboard:', error);
-    renderRecent([]);
-});

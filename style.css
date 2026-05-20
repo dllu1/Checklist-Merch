@@ -1636,3 +1636,8 @@ button:focus-visible, .filters input:focus-visible, .filters select:focus-visibl
 /* Reset any leftover legacy classes that might appear in markup */
 .product-item, .action-buttons, .action-row,
 .btn-status, .btn-status.bought, .btn-status.unbought { all: unset; }
+
+/* ===== Soft-nav transition ===== */
+.container { transition: opacity 180ms ease; }
+.soft-nav-loading .container { opacity: 0.55; }
+.soft-nav-loading { cursor: progress; }

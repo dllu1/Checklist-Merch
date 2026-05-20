@@ -17,8 +17,9 @@ import {
     uploadBlob,
 } from './storage_files.js';
 
-const currentPath = window.location.pathname;
-const isMarch7thPage = /(?:^|\/)march7th(?:\.php|\.html)?(?:[/?#]|$)/i.test(currentPath);
+function isMarch7thPage() {
+    return /(?:^|\/)march7th(?:\.php|\.html)?(?:[/?#]|$)/i.test(window.location.pathname);
+}
 
 const MARCH_GROUP = ['march 7th', 'evernight'];
 const PRODUCT_IMAGE_BUCKET = 'product-images';
@@ -52,7 +53,7 @@ function pickGlyph(catName) {
 }
 
 function getScopedProducts(products) {
-    if (isMarch7thPage) {
+    if (isMarch7thPage()) {
         return products.filter(p => isInMarchGroup(p.ten_nhan_vat));
     }
     return products;
@@ -562,14 +563,21 @@ function setupModalDrag() {
     });
 }
 
-async function bootstrap() {
+let firstInitDone = false;
+
+export async function initApp() {
     if (!SUPABASE_CONFIGURED) {
         showLoadError('Chưa cấu hình Supabase. Hãy cập nhật supabase-config.js.');
         return;
     }
-    const session = await requireSession();
-    if (!session) return;
-    wireEvents();
+
+    if (!firstInitDone) {
+        const session = await requireSession();
+        if (!session) return;
+        wireEvents();
+        firstInitDone = true;
+    }
+
     await loadCategories();
     await loadData();
     await loadCategoryCounts();
@@ -583,5 +591,3 @@ window.editProduct = editProduct;
 window.deleteProduct = deleteProduct;
 window.toggleBuyStatus = toggleBuyStatus;
 window.signOutAndRedirect = signOutAndRedirect;
-
-bootstrap();
