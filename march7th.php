@@ -7,6 +7,8 @@ require __DIR__ . '/_layout.php';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="public/march7th.png?v=20260520">
+    <link rel="shortcut icon" type="image/png" href="public/march7th.png?v=20260520">
     <title>March 7th · Checklist Merch</title>
     <link rel="stylesheet" href="style.css">
 </head>

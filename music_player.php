@@ -9,8 +9,10 @@ $tracks = array_map(static function (string $path): array {
     $name = pathinfo($file, PATHINFO_FILENAME);
     $name = preg_replace('/\s*\[[A-Za-z0-9_\-]+\]\s*$/', '', $name) ?? $name;
     return [
+        'id'    => rawurlencode($file),
         'src'   => 'audio/' . rawurlencode($file),
         'title' => trim($name),
+        'file'  => $file,
     ];
 }, $audioFiles);
 ?>
@@ -331,6 +333,166 @@ $tracks = array_map(static function (string $path): array {
         cursor: pointer;
     }
 
+    .mp-add-inline {
+        display: none;
+        font-size: 20px;
+        line-height: 1;
+        color: #d94f86;
+    }
+    .mp-card.has-playlist .mp-add-inline {
+        display: inline-flex;
+    }
+
+    .mp-playlist {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px dashed rgba(122, 104, 184, 0.14);
+    }
+    .mp-playlist-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 8px;
+    }
+    .mp-playlist-title {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10px;
+        letter-spacing: 0.16em;
+        color: #d94f86;
+        text-transform: uppercase;
+    }
+    .mp-playlist-count {
+        font-size: 11px;
+        color: #9e8ec0;
+        white-space: nowrap;
+    }
+    .mp-playlist-list,
+    .mp-library-list {
+        display: grid;
+        gap: 6px;
+        max-height: 142px;
+        overflow-y: auto;
+        padding-right: 2px;
+    }
+    .mp-playlist-item,
+    .mp-library-item {
+        appearance: none;
+        width: 100%;
+        border: 1px solid rgba(122, 104, 184, 0.12);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.48);
+        color: #3a2a55;
+        cursor: pointer;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 8px;
+        min-height: 36px;
+        padding: 8px 10px;
+        text-align: left;
+        transition: background 160ms, border-color 160ms, color 160ms, transform 160ms;
+    }
+    .mp-playlist-item:hover,
+    .mp-library-item:hover {
+        background: rgba(255, 255, 255, 0.82);
+        border-color: rgba(255, 126, 176, 0.35);
+        transform: translateY(-1px);
+    }
+    .mp-playlist-item.active {
+        background: linear-gradient(135deg, rgba(255, 126, 176, 0.18), rgba(111, 199, 255, 0.16));
+        border-color: rgba(255, 126, 176, 0.4);
+        color: #d94f86;
+    }
+    .mp-track-name {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .mp-track-action {
+        color: #9e8ec0;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        white-space: nowrap;
+    }
+    .mp-playlist-empty {
+        display: grid;
+        place-items: center;
+        min-height: 74px;
+        border: 1px dashed rgba(122, 104, 184, 0.22);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.32);
+        color: #9e8ec0;
+        font-size: 12px;
+        text-align: center;
+        padding: 12px;
+    }
+    .mp-add-large {
+        appearance: none;
+        width: 100%;
+        border: 0;
+        border-radius: 14px;
+        margin-top: 8px;
+        min-height: 40px;
+        background: linear-gradient(135deg, rgba(255, 126, 176, 0.92), rgba(111, 199, 255, 0.88));
+        color: #fff;
+        cursor: pointer;
+        font-family: 'Quicksand', sans-serif;
+        font-weight: 700;
+        box-shadow: 0 8px 20px -10px rgba(217, 79, 134, 0.65);
+    }
+    .mp-card.has-playlist .mp-add-large {
+        display: none;
+    }
+    .mp-library-panel {
+        display: none;
+        margin-top: 10px;
+        padding: 10px;
+        border: 1px solid rgba(122, 104, 184, 0.12);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.42);
+    }
+    .mp-library-panel.open {
+        display: block;
+    }
+    .mp-library-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 8px;
+    }
+    .mp-library-title {
+        font-size: 11px;
+        color: #6b5688;
+        font-weight: 700;
+    }
+    .mp-library-close {
+        appearance: none;
+        width: 22px; height: 22px;
+        border: 0;
+        border-radius: 50%;
+        background: rgba(255, 126, 176, 0.12);
+        color: #d94f86;
+        cursor: pointer;
+        display: inline-flex; align-items: center; justify-content: center;
+        padding: 0;
+    }
+    .mp-library-item[disabled] {
+        cursor: default;
+        opacity: 0.62;
+        transform: none;
+    }
+    .mp-btn:disabled,
+    .mp-seek:disabled {
+        cursor: not-allowed;
+        opacity: 0.45;
+        transform: none;
+    }
+
     .mp-empty {
         font-family: 'Quicksand', sans-serif;
         font-size: 0.85rem;
@@ -373,10 +535,26 @@ $tracks = array_map(static function (string $path): array {
             <button type="button" class="mp-btn mp-play" id="mp-play" title="Phát / Tạm dừng" aria-label="Phát hoặc tạm dừng">▶</button>
             <button type="button" class="mp-btn" id="mp-next" title="Bài sau" aria-label="Bài sau">⏭</button>
             <button type="button" class="mp-btn" id="mp-loop" title="Lặp lại" aria-label="Lặp lại">↻</button>
+            <button type="button" class="mp-btn mp-add-inline" id="mp-add-inline" title="Thêm nhạc" aria-label="Thêm nhạc">+</button>
         </div>
         <div class="mp-volume-row">
             <span class="mp-volume-ic" aria-hidden="true">🔉</span>
             <input type="range" class="mp-volume" id="mp-volume" min="0" max="1" step="0.05" value="0.5" title="Âm lượng" aria-label="Âm lượng">
+        </div>
+        <div class="mp-playlist" id="mp-playlist">
+            <div class="mp-playlist-head">
+                <span class="mp-playlist-title">Playlist</span>
+                <span class="mp-playlist-count" id="mp-playlist-count">0 bài</span>
+            </div>
+            <div class="mp-playlist-list" id="mp-playlist-list"></div>
+            <button type="button" class="mp-add-large" id="mp-add-large">Thêm nhạc từ audio</button>
+            <div class="mp-library-panel" id="mp-library-panel">
+                <div class="mp-library-head">
+                    <span class="mp-library-title">Chọn nhạc trong thư mục audio</span>
+                    <button type="button" class="mp-library-close" id="mp-library-close" aria-label="Đóng">×</button>
+                </div>
+                <div class="mp-library-list" id="mp-library-list"></div>
+            </div>
         </div>
     <?php endif; ?>
 </div>
@@ -389,7 +567,7 @@ $tracks = array_map(static function (string $path): array {
 <?php if ($tracks !== []): ?>
 <script>
 (() => {
-    const tracks = <?= json_encode($tracks, JSON_UNESCAPED_UNICODE) ?>;
+    const library = <?= json_encode($tracks, JSON_UNESCAPED_UNICODE) ?>;
     const STORAGE_KEY = 'merchMusicState';
 
     const audio   = new Audio();
@@ -404,16 +582,28 @@ $tracks = array_map(static function (string $path): array {
     const nextBtn    = document.getElementById('mp-next');
     const shuffleBtn = document.getElementById('mp-shuffle');
     const loopBtn    = document.getElementById('mp-loop');
+    const addInline  = document.getElementById('mp-add-inline');
+    const addLarge   = document.getElementById('mp-add-large');
     const volume     = document.getElementById('mp-volume');
     const seek       = document.getElementById('mp-seek');
     const titleEl    = document.getElementById('mp-title');
+    const artistEl   = document.getElementById('mp-artist');
     const timeCur    = document.getElementById('mp-time-cur');
     const timeDur    = document.getElementById('mp-time-dur');
     const disc       = document.getElementById('mp-disc');
+    const playlistList  = document.getElementById('mp-playlist-list');
+    const playlistCount = document.getElementById('mp-playlist-count');
+    const libraryPanel  = document.getElementById('mp-library-panel');
+    const libraryList   = document.getElementById('mp-library-list');
+    const libraryClose  = document.getElementById('mp-library-close');
 
     const state = JSON.parse(sessionStorage.getItem(STORAGE_KEY) ?? '{}');
-    let index     = Math.min(state.index ?? 0, tracks.length - 1);
-    let playing   = state.playing ?? true;
+    const byId = new Map(library.map(track => [track.id, track]));
+    const storedPlaylist = Array.isArray(state.playlist) ? state.playlist : [];
+    let playlist = storedPlaylist.filter(id => byId.has(id));
+
+    let index     = Math.max(0, Math.min(state.index ?? 0, Math.max(playlist.length - 1, 0)));
+    let playing   = playlist.length > 0 ? (state.playing ?? true) : false;
     let shuffle   = state.shuffle ?? false;
     let loopMode  = state.loopMode ?? 'off'; // 'off' | 'all' | 'one'
     let isSeeking = false;
@@ -424,6 +614,7 @@ $tracks = array_map(static function (string $path): array {
     const persist = () => {
         sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
             index,
+            playlist,
             playing,
             shuffle,
             loopMode,
@@ -432,10 +623,25 @@ $tracks = array_map(static function (string $path): array {
         }));
     };
 
+    const getQueue = () => playlist.map(id => byId.get(id)).filter(Boolean);
+
+    const hasQueue = () => getQueue().length > 0;
+
+    const clampIndex = () => {
+        const queue = getQueue();
+        if (queue.length === 0) {
+            index = 0;
+            return queue;
+        }
+        index = Math.max(0, Math.min(index, queue.length - 1));
+        return queue;
+    };
+
     const pickRandomIdx = () => {
-        if (tracks.length <= 1) return index;
+        const queue = getQueue();
+        if (queue.length <= 1) return index;
         let n;
-        do { n = Math.floor(Math.random() * tracks.length); } while (n === index);
+        do { n = Math.floor(Math.random() * queue.length); } while (n === index);
         return n;
     };
 
@@ -455,10 +661,98 @@ $tracks = array_map(static function (string $path): array {
         return `${m}:${sec}`;
     };
 
+    const renderPlaylist = () => {
+        const queue = clampIndex();
+        const hasItems = queue.length > 0;
+        card.classList.toggle('has-playlist', hasItems);
+        playlistCount.textContent = `${queue.length} bài`;
+        playlistList.innerHTML = '';
+
+        if (!hasItems) {
+            const empty = document.createElement('div');
+            empty.className = 'mp-playlist-empty';
+            empty.textContent = 'Chưa có bài trong playlist';
+            playlistList.appendChild(empty);
+            return;
+        }
+
+        queue.forEach((track, idx) => {
+            const item = document.createElement('button');
+            item.type = 'button';
+            item.className = `mp-playlist-item${idx === index ? ' active' : ''}`;
+            item.dataset.index = String(idx);
+
+            const name = document.createElement('span');
+            name.className = 'mp-track-name';
+            name.textContent = track.title;
+
+            const action = document.createElement('span');
+            action.className = 'mp-track-action';
+            action.textContent = idx === index ? 'Đang phát' : 'Phát';
+
+            item.append(name, action);
+            item.addEventListener('click', () => {
+                index = idx;
+                loadTrack();
+                play();
+            });
+            playlistList.appendChild(item);
+        });
+    };
+
+    const renderLibrary = () => {
+        libraryList.innerHTML = '';
+        library.forEach(track => {
+            const exists = playlist.includes(track.id);
+            const item = document.createElement('button');
+            item.type = 'button';
+            item.className = 'mp-library-item';
+            item.disabled = exists;
+
+            const name = document.createElement('span');
+            name.className = 'mp-track-name';
+            name.textContent = track.title;
+
+            const action = document.createElement('span');
+            action.className = 'mp-track-action';
+            action.textContent = exists ? 'Đã thêm' : '+ Thêm';
+
+            item.append(name, action);
+            item.addEventListener('click', () => addToPlaylist(track.id));
+            libraryList.appendChild(item);
+        });
+    };
+
+    const renderDisabledState = () => {
+        const disabled = !hasQueue();
+        [playBtn, prevBtn, nextBtn, shuffleBtn, loopBtn, seek].forEach(el => {
+            el.disabled = disabled;
+        });
+        if (disabled) {
+            titleEl.textContent = 'Chưa chọn bài';
+            artistEl.textContent = 'Thêm nhạc từ thư mục audio';
+            timeCur.textContent = '0:00';
+            timeDur.textContent = '0:00';
+            seek.value = 0;
+            seek.style.setProperty('--mp-progress', '0%');
+        }
+    };
+
     const loadTrack = (resumeAt = 0) => {
-        const track = tracks[index];
+        const queue = clampIndex();
+        const track = queue[index];
+        if (!track) {
+            audio.removeAttribute('src');
+            renderDisabledState();
+            return;
+        }
         audio.src = track.src;
         titleEl.textContent = track.title;
+        artistEl.textContent = 'Frost & Petal · OST';
+        seek.value = 0;
+        seek.style.setProperty('--mp-progress', '0%');
+        timeCur.textContent = '0:00';
+        timeDur.textContent = '0:00';
         audio.addEventListener('loadedmetadata', () => {
             if (resumeAt > 0 && resumeAt < audio.duration) audio.currentTime = resumeAt;
             timeDur.textContent = fmt(audio.duration);
@@ -473,9 +767,17 @@ $tracks = array_map(static function (string $path): array {
         fab.setAttribute('data-playing', playing ? 'true' : 'false');
         fabInner.innerHTML = playing ? FAB_ICON_EQ : FAB_ICON_PLAY;
         disc.classList.toggle('paused', !playing);
+        renderDisabledState();
+        renderPlaylist();
     };
 
     const play = async () => {
+        if (!hasQueue()) {
+            playing = false;
+            renderState();
+            persist();
+            return;
+        }
         try { await audio.play(); playing = true; }
         catch { playing = false; }
         renderState();
@@ -488,8 +790,30 @@ $tracks = array_map(static function (string $path): array {
         persist();
     };
 
+    const toggleLibrary = (force) => {
+        const shouldOpen = typeof force === 'boolean' ? force : !libraryPanel.classList.contains('open');
+        libraryPanel.classList.toggle('open', shouldOpen);
+        if (shouldOpen) renderLibrary();
+    };
+
+    const addToPlaylist = (trackId) => {
+        if (!byId.has(trackId) || playlist.includes(trackId)) return;
+        const wasEmpty = playlist.length === 0;
+        playlist = [...playlist, trackId];
+        if (wasEmpty) {
+            index = 0;
+            loadTrack();
+        }
+        renderPlaylist();
+        renderLibrary();
+        renderState();
+        persist();
+    };
+
     playBtn.addEventListener('click', () => (playing ? pause() : play()));
     prevBtn.addEventListener('click', () => {
+        const queue = getQueue();
+        if (queue.length === 0) return;
         // If more than 3s into the song, restart it (typical player behavior).
         // Otherwise go to previous track (respecting shuffle).
         if (audio.currentTime > 3) {
@@ -497,12 +821,14 @@ $tracks = array_map(static function (string $path): array {
             persist();
             return;
         }
-        index = shuffle ? pickRandomIdx() : (index - 1 + tracks.length) % tracks.length;
+        index = shuffle ? pickRandomIdx() : (index - 1 + queue.length) % queue.length;
         loadTrack();
         if (playing) play(); else persist();
     });
     nextBtn.addEventListener('click', () => {
-        index = shuffle ? pickRandomIdx() : (index + 1) % tracks.length;
+        const queue = getQueue();
+        if (queue.length === 0) return;
+        index = shuffle ? pickRandomIdx() : (index + 1) % queue.length;
         loadTrack();
         if (playing) play(); else persist();
     });
@@ -516,6 +842,9 @@ $tracks = array_map(static function (string $path): array {
         renderModeButtons();
         persist();
     });
+    addInline.addEventListener('click', () => toggleLibrary());
+    addLarge.addEventListener('click', () => toggleLibrary(true));
+    libraryClose.addEventListener('click', () => toggleLibrary(false));
     volume.addEventListener('input', () => {
         audio.volume = Number(volume.value);
         persist();
@@ -534,6 +863,11 @@ $tracks = array_map(static function (string $path): array {
     });
 
     audio.addEventListener('ended', () => {
+        const queue = getQueue();
+        if (queue.length === 0) {
+            pause();
+            return;
+        }
         if (loopMode === 'one') {
             audio.currentTime = 0;
             play();
@@ -545,9 +879,9 @@ $tracks = array_map(static function (string $path): array {
             play();
             return;
         }
-        const nextIdx = (index + 1) % tracks.length;
+        const nextIdx = (index + 1) % queue.length;
         // If we've looped back to the start and loop mode is 'off', stop.
-        if (nextIdx === 0 && loopMode === 'off' && tracks.length > 1) {
+        if (nextIdx === 0 && loopMode === 'off' && queue.length > 1) {
             index = nextIdx;
             loadTrack();
             pause();
@@ -572,6 +906,8 @@ $tracks = array_map(static function (string $path): array {
     closeBtn.addEventListener('click', () => card.classList.remove('open'));
 
     loadTrack(state.currentTime ?? 0);
+    renderPlaylist();
+    renderLibrary();
     renderState();
     renderModeButtons();
 
@@ -591,7 +927,7 @@ $tracks = array_map(static function (string $path): array {
             events.forEach(e => document.addEventListener(e, resume, { once: true, passive: true }));
         });
     };
-    tryAutoplay();
+    if (hasQueue()) tryAutoplay();
 })();
 </script>
 <?php endif; ?>
