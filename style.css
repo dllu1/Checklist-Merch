@@ -115,6 +115,13 @@ body {
     font-size: 0.9rem;
 }
 
+.auth-captcha {
+    display: flex;
+    justify-content: center;
+    min-height: 0;
+}
+.auth-captcha:empty { display: none; }
+
 /* ===== Background ===== */
 .bg-wrap {
     position: fixed; inset: 0; z-index: 0;

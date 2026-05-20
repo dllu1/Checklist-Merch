@@ -90,7 +90,6 @@ function render_crest(): void
 
 function render_hero(string $active, string $title, string $subtitle): void
 {
-    $today = strftime_safe();
     ?>
     <header class="hero">
         <?php render_crest(); ?>
@@ -103,8 +102,16 @@ function render_hero(string $active, string $title, string $subtitle): void
             <a href="dashboard.php"<?= $active === 'dash' ? ' class="active"' : '' ?>>❄ Dashboard</a>
             <a href="#" onclick="signOutAndRedirect(); return false;">Logout</a>
         </nav>
-        <div class="hero-meta">Astral Express · <?= $today ?></div>
+        <div class="hero-meta">Astral Express · <span data-hero-date>—</span></div>
     </header>
+    <script>
+        (function () {
+            const months = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
+            const d = new Date();
+            const text = String(d.getDate()).padStart(2,'0') + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+            document.querySelectorAll('[data-hero-date]').forEach(el => { el.textContent = text; });
+        })();
+    </script>
 <?php }
 
 function strftime_safe(): string

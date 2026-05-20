@@ -6,21 +6,27 @@ import {
     fetchProducts,
     fetchCategories,
     getSignedUrl,
-    makeStoragePath,
     escapeHtml,
 } from './supabase_client.js';
+import {
+    PRODUCT_IMAGE_RULES,
+    validateFile,
+    makeObjectUrl,
+    revokeObjectUrl,
+    buildStoragePath,
+    uploadBlob,
+} from './storage_files.js';
 
 const currentPath = window.location.pathname;
-const isMarch7thPage = currentPath.includes('march7th.php');
+const isMarch7thPage = currentPath.includes('march7th.php') || currentPath.includes('march7th.html');
 
 const MARCH_GROUP = ['march 7th', 'evernight'];
 const PRODUCT_IMAGE_BUCKET = 'product-images';
-const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
-const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 let CATEGORIES = [];
 let CAT_COUNTS = {};
 let ALL_PRODUCTS = [];
+let previewObjectUrl = '';
 
 function isInMarchGroup(name) {
     return MARCH_GROUP.includes((name || '').trim().toLowerCase());
@@ -254,6 +260,8 @@ function syncGlyphPicker() {
 function resetDropZone() {
     const file = document.getElementById('form-hinh');
     if (file) file.value = '';
+    revokeObjectUrl(previewObjectUrl);
+    previewObjectUrl = '';
     const def = document.getElementById('pm-drop-default');
     const prev = document.getElementById('pm-drop-prev');
     if (def) def.hidden = false;
@@ -262,8 +270,9 @@ function resetDropZone() {
 
 function showFilePreview(file) {
     if (!file) return;
-    const url = URL.createObjectURL(file);
-    document.getElementById('pm-prev-img').src = url;
+    revokeObjectUrl(previewObjectUrl);
+    previewObjectUrl = makeObjectUrl(file);
+    document.getElementById('pm-prev-img').src = previewObjectUrl;
     document.getElementById('pm-prev-name').textContent = file.name;
     document.getElementById('pm-prev-size').textContent = `${(file.size / 1024).toFixed(1)} KB · Click hoặc kéo file khác để thay`;
     document.getElementById('pm-drop-default').hidden = true;
@@ -272,18 +281,12 @@ function showFilePreview(file) {
 
 async function uploadProductImage(file) {
     if (!file) return '';
-    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-        throw new Error('Chỉ chấp nhận JPG, PNG, WebP hoặc GIF.');
-    }
-    if (file.size <= 0 || file.size > MAX_IMAGE_SIZE) {
-        throw new Error('Ảnh rỗng hoặc vượt quá 5MB.');
-    }
-
-    const path = makeStoragePath(file, 'products');
-    const { error } = await supabase.storage
-        .from(PRODUCT_IMAGE_BUCKET)
-        .upload(path, file, { contentType: file.type, upsert: false });
-    if (error) throw error;
+    const validated = await validateFile(file, PRODUCT_IMAGE_RULES);
+    const path = buildStoragePath(file, 'products', validated.extension);
+    await uploadBlob(supabase.storage, PRODUCT_IMAGE_BUCKET, path, file, {
+        contentType: validated.contentType,
+        metadata: validated.metadata,
+    });
     return path;
 }
 
@@ -441,10 +444,17 @@ function wireEvents() {
         }
     });
 
-    document.addEventListener('change', (e) => {
+    document.addEventListener('change', async (e) => {
         if (e.target.id === 'form-hinh') {
             const f = e.target.files?.[0];
-            if (f) showFilePreview(f);
+            if (!f) return;
+            try {
+                await validateFile(f, PRODUCT_IMAGE_RULES);
+                showFilePreview(f);
+            } catch (error) {
+                alert(error.message);
+                resetDropZone();
+            }
         }
     });
 
@@ -459,18 +469,24 @@ function wireEvents() {
         if (!drop) return;
         drop.setAttribute('data-over', 'false');
     });
-    document.addEventListener('drop', (e) => {
+    document.addEventListener('drop', async (e) => {
         const drop = e.target.closest('#pm-drop');
         if (!drop) return;
         e.preventDefault();
         drop.setAttribute('data-over', 'false');
         const f = e.dataTransfer.files?.[0];
         if (f) {
-            const file = document.getElementById('form-hinh');
-            const dt = new DataTransfer();
-            dt.items.add(f);
-            file.files = dt.files;
-            showFilePreview(f);
+            try {
+                await validateFile(f, PRODUCT_IMAGE_RULES);
+                const file = document.getElementById('form-hinh');
+                const dt = new DataTransfer();
+                dt.items.add(f);
+                file.files = dt.files;
+                showFilePreview(f);
+            } catch (error) {
+                alert(error.message);
+                resetDropZone();
+            }
         }
     });
 

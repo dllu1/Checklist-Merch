@@ -42,6 +42,15 @@ products/your-file-id.webp
 
 - Existing local paths like `images/hoodie.jpg` can still display locally, but should be migrated to Storage before deployment.
 
+## File and Blob Handling
+
+- Product image uploads use `storage_files.js` to validate browser `File` objects before uploading to Supabase Storage.
+- Images are limited to 5MB and must be valid JPEG, PNG, WebP, or GIF files.
+- The client checks both the file name/type and the first bytes of the `Blob` with `slice().arrayBuffer()` before upload.
+- Preview URLs created with `URL.createObjectURL()` are revoked when the selected file changes or the modal resets.
+- Uploaded image rows store the Storage object path only; signed URLs are generated when rendering.
+- Music player uploads use the same helper with `AUDIO_FILE_RULES`, accept MP3/M4A/OGG/WAV up to 25MB, and store files under `audio/tracks/`.
+
 ## Deployment
 
 For the least code churn, deploy the PHP files to a free PHP host such as InfinityFree and let Supabase handle Auth/DB/Storage.

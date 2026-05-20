@@ -34,10 +34,16 @@ export async function getSession() {
     return data.session;
 }
 
+function loginUrl(next = '') {
+    const isStatic = !window.location.pathname.endsWith('.php');
+    const target = isStatic ? 'login.html' : 'login.php';
+    return next ? `${target}?next=${encodeURIComponent(next)}` : target;
+}
+
 export async function requireSession() {
     const session = await getSession();
     if (!session) {
-        window.location.href = `login.php?next=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+        window.location.href = loginUrl(window.location.pathname + window.location.search);
         return null;
     }
     return session;
@@ -46,7 +52,7 @@ export async function requireSession() {
 export async function signOutAndRedirect() {
     requireSupabaseConfig();
     await supabase.auth.signOut();
-    window.location.href = 'login.php';
+    window.location.href = loginUrl();
 }
 
 export function normalizeProduct(row) {
@@ -97,12 +103,6 @@ export async function getSignedUrl(bucket, path, expiresIn = 3600) {
         expiresAt: Date.now() + expiresIn * 1000,
     });
     return data.signedUrl;
-}
-
-export function makeStoragePath(file, prefix) {
-    const ext = (file.name.split('.').pop() || 'bin').toLowerCase().replace(/[^a-z0-9]/g, '');
-    const id = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    return `${prefix}/${id}.${ext || 'bin'}`;
 }
 
 export function escapeHtml(str) {
