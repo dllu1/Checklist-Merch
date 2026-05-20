@@ -42,6 +42,9 @@ const uploadStatus = document.getElementById('mp-upload-status');
 
 const LOOP_MODES = ['off', 'all', 'one'];
 const LOOP_LABELS = { off: 'Loop tắt', all: 'Loop danh sách', one: 'Loop bài này' };
+const STATE_KEY = 'mp_state_v1';
+const SAVE_DEBOUNCE_MS = 1500;
+const STATE_TTL_MS = 24 * 60 * 60 * 1000;
 
 let tracks = [];
 let index = 0;
@@ -49,6 +52,51 @@ let playing = false;
 let isSeeking = false;
 let shuffle = false;
 let loopMode = 'off';
+let initialState = null;
+let saveTimer = null;
+
+function loadState() {
+    try {
+        const raw = localStorage.getItem(STATE_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (!parsed || (parsed.ts && Date.now() - parsed.ts > STATE_TTL_MS)) return null;
+        return parsed;
+    } catch {
+        return null;
+    }
+}
+
+function saveStateNow() {
+    try {
+        const state = {
+            path: tracks[index]?.path || null,
+            time: Number.isFinite(audio.currentTime) ? audio.currentTime : 0,
+            volume: audio.volume,
+            playing,
+            shuffle,
+            loopMode,
+            ts: Date.now(),
+        };
+        localStorage.setItem(STATE_KEY, JSON.stringify(state));
+    } catch {
+        /* localStorage may be full or disabled */
+    }
+}
+
+function saveStateDebounced() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveStateNow, SAVE_DEBOUNCE_MS);
+}
+
+initialState = loadState();
+if (initialState) {
+    if (typeof initialState.volume === 'number') volume.value = String(initialState.volume);
+    if (typeof initialState.shuffle === 'boolean') shuffle = initialState.shuffle;
+    if (typeof initialState.loopMode === 'string' && LOOP_MODES.includes(initialState.loopMode)) {
+        loopMode = initialState.loopMode;
+    }
+}
 
 audio.volume = Number(volume.value || 0.5);
 updateRangeFill(volume);
@@ -135,6 +183,7 @@ async function play() {
     try {
         await audio.play();
         setPlaying(true);
+        saveStateNow();
     } catch (error) {
         setPlaying(false);
     }
@@ -143,6 +192,7 @@ async function play() {
 function pause() {
     audio.pause();
     setPlaying(false);
+    saveStateNow();
 }
 
 async function listAudio(prefix = '') {
@@ -169,15 +219,24 @@ async function listAudio(prefix = '') {
 
 async function refreshAudioLibrary(selectedPath = '') {
     tracks = await listAudio();
+    let resumeAt = 0;
     if (selectedPath) {
         const nextIndex = tracks.findIndex(track => track.path === selectedPath);
         index = nextIndex >= 0 ? nextIndex : 0;
+    } else if (initialState?.path) {
+        const savedIndex = tracks.findIndex(track => track.path === initialState.path);
+        if (savedIndex >= 0) {
+            index = savedIndex;
+            resumeAt = Number(initialState.time) || 0;
+        } else {
+            index = Math.min(index, Math.max(tracks.length - 1, 0));
+        }
     } else {
         index = Math.min(index, Math.max(tracks.length - 1, 0));
     }
 
     renderPlaylist();
-    if (tracks.length > 0) await loadTrack();
+    if (tracks.length > 0) await loadTrack(resumeAt);
 }
 
 async function uploadAudioFile(file) {
@@ -208,6 +267,15 @@ async function bootstrapMusic() {
     }
 
     await refreshAudioLibrary();
+
+    if (initialState?.playing && tracks.length > 0 && initialState.path === tracks[index]?.path) {
+        try {
+            await audio.play();
+            setPlaying(true);
+        } catch {
+            setPlaying(false);
+        }
+    }
 }
 
 function pickNextIndex(direction = 1) {
@@ -256,11 +324,13 @@ nextBtn.addEventListener('click', async () => {
 shuffleBtn?.addEventListener('click', () => {
     shuffle = !shuffle;
     updateShuffleUI();
+    saveStateNow();
 });
 loopBtn?.addEventListener('click', () => {
     const i = LOOP_MODES.indexOf(loopMode);
     loopMode = LOOP_MODES[(i + 1) % LOOP_MODES.length];
     updateLoopUI();
+    saveStateNow();
 });
 uploadBtn?.addEventListener('click', () => uploadInput?.click());
 uploadInput?.addEventListener('change', async () => {
@@ -281,6 +351,7 @@ uploadInput?.addEventListener('change', async () => {
 volume.addEventListener('input', () => {
     audio.volume = Number(volume.value);
     updateRangeFill(volume);
+    saveStateDebounced();
 });
 seek.addEventListener('input', () => {
     isSeeking = true;
@@ -290,6 +361,7 @@ seek.addEventListener('change', () => {
     if (Number.isFinite(audio.duration)) audio.currentTime = (Number(seek.value) / 1000) * audio.duration;
     isSeeking = false;
     updateRangeFill(seek);
+    saveStateNow();
 });
 async function deleteTrackAt(targetIndex) {
     const track = tracks[targetIndex];
@@ -330,10 +402,12 @@ playlistList.addEventListener('click', async (event) => {
     index = Number(selectBtn.dataset.index || 0);
     await loadTrack();
     play();
+    saveStateNow();
 });
 audio.addEventListener('timeupdate', () => {
     timeCur.textContent = fmt(audio.currentTime);
     timeDur.textContent = fmt(audio.duration);
+    saveStateDebounced();
     if (!isSeeking && Number.isFinite(audio.duration) && audio.duration > 0) {
         seek.value = String((audio.currentTime / audio.duration) * 1000);
         updateRangeFill(seek);
@@ -361,6 +435,12 @@ audio.addEventListener('ended', async () => {
 
 updateShuffleUI();
 updateLoopUI();
+
+window.addEventListener('pagehide', saveStateNow);
+window.addEventListener('beforeunload', saveStateNow);
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') saveStateNow();
+});
 
 bootstrapMusic().catch(error => {
     console.error('Lỗi tải nhạc:', error);
