@@ -1,29 +1,61 @@
-﻿# Anime Merch Checklist Manager
+# Anime Merch Checklist Manager
 
-Một ứng dụng Web Full-stack (Single Page Application) giúp quản lý, phân loại và tính toán chi phí cho bộ sưu tập Merchandise Anime. Dự án được xây dựng với mục tiêu tối ưu hóa trải nghiệm người dùng thông qua việc cập nhật dữ liệu Real-time bằng AJAX mà không cần tải lại trang.
+Private merch checklist app using PHP-rendered pages plus Supabase for Auth, Postgres data, and Storage.
 
+## Stack
 
-## Tính năng nổi bật
+- Frontend: PHP templates, CSS, Vanilla JavaScript modules
+- Auth: Supabase Auth, email + password
+- Database: Supabase Postgres
+- Storage: Supabase Storage buckets `product-images` and `audio`
 
-* **CRUD Real-time:** Thêm, sửa, xóa sản phẩm mượt mà với giao diện cửa sổ Pop-up (Modal) có thể kéo thả (Draggable).
-* **Lọc & Tìm kiếm thông minh:** Lọc sản phẩm theo danh mục, khoảng giá, trạng thái mua hàng và tự động sắp xếp (Mới nhất, Cũ nhất, Giá tăng/giảm, Số lượng).
-* **Tính toán tự động:** Bảng Dashboard tự động cập nhật tổng tiền cho 3 trạng thái: Tổng toàn bộ, Đã mua và Chưa mua.
-* **Thay đổi trạng thái nhanh (Quick Toggle):** Chuyển đổi trạng thái "Đã mua / Chưa mua" chỉ với một click, đồng bộ ngay lập tức vào Database.
-* **Giao diện Responsive:** Giao diện dạng danh sách (List View) gọn gàng, tối ưu hóa hiển thị 100% cho cả Desktop và Mobile.
+The old PHP/MySQL API layer has been removed. The app reads and writes data through Supabase with Row Level Security.
 
-## Công nghệ sử dụng (Tech Stack)
+## Supabase Setup
 
-* **Frontend:** HTML5, CSS3 (Flexbox/Grid), Vanilla JavaScript (Fetch API, DOM Manipulation).
-* **Backend:** PHP 8.5.6 (Xử lý API RESTful).
-* **Database:** MySQL (Sử dụng PDO để kết nối an toàn, chống SQL Injection).
+1. Create a Supabase project.
+2. In Authentication, keep Email/Password enabled.
+3. Create user accounts for you and your friend.
+4. Open the Supabase SQL Editor and run `supabase_schema.sql`.
+5. Upload product images to the private `product-images` bucket.
+6. Upload music files to the private `audio` bucket.
+7. Update `supabase-config.js`:
 
-## Cài đặt dự án ở Local (Máy cá nhân)
+```js
+window.MERCH_SUPABASE = {
+    url: 'https://YOUR_PROJECT_REF.supabase.co',
+    publishableKey: 'YOUR_SUPABASE_PUBLISHABLE_KEY',
+};
+```
 
-Để chạy dự án này trên máy tính của bạn, hãy làm theo các bước sau:
+Use the publishable/anon key only. Never put the service role key in browser code.
 
-1. Đảm bảo máy tính đã cài đặt [XAMPP](https://www.apachefriends.org/index.html) hoặc phần mềm giả lập Server tương tự.
-2. Clone repository này về thư mục `htdocs` của XAMPP:
-   ```bash
-   git clone [https://github.com/ten-cua-ban/merch-checklist.git](https://github.com/ten-cua-ban/merch-checklist.git)
-3. Mở XAMPP Control Panel và khởi động Apache và MySQL.
-4. Truy cập 'http://localhost/ten-thu-muc-ban-dat' trên trình duyệt để xem ứng dụng.
+## Data Migration Notes
+
+- `shop_db.sql` is kept only as the old MySQL export/reference.
+- Migrate rows from old `categories` and `products` into Supabase tables.
+- For product images, store the Supabase object path in `products.hinh_san_pham`, for example:
+
+```text
+products/your-file-id.webp
+```
+
+- Existing local paths like `images/hoodie.jpg` can still display locally, but should be migrated to Storage before deployment.
+
+## Deployment
+
+For the least code churn, deploy the PHP files to a free PHP host such as InfinityFree and let Supabase handle Auth/DB/Storage.
+
+Required files to upload:
+
+- `*.php`
+- `*.js`
+- `style.css`
+- `public/`
+- `supabase-config.js`
+
+Do not upload the deleted old API files. They are no longer used.
+
+## Removed Feature
+
+Dynamic background upload/selection has been removed to preserve Supabase Storage quota. The app always uses the original animated background rendered by `_layout.php`.

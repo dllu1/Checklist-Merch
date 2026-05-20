@@ -209,9 +209,8 @@ require __DIR__ . '/_layout.php';
     </div>
 </div>
 
+<script src="supabase-config.js"></script>
 <?php require __DIR__ . '/music_player.php'; ?>
-<?php require __DIR__ . '/background_picker.php'; ?>
-
-<script src="app.js"></script>
+<script type="module" src="app.js"></script>
 </body>
 </html>
