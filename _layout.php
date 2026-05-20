@@ -99,6 +99,7 @@ function render_hero(string $active, string $title, string $subtitle): void
         <nav>
             <a href="index.php"<?= $active === 'all' ? ' class="active"' : '' ?>>✦ Tất cả sản phẩm</a>
             <a href="march7th.php"<?= $active === 'march' ? ' class="active"' : '' ?>>✿ March 7th/Evernight</a>
+            <a href="categories.php"<?= $active === 'cat' ? ' class="active"' : '' ?>>✧ Danh mục</a>
             <a href="dashboard.php"<?= $active === 'dash' ? ' class="active"' : '' ?>>❄ Dashboard</a>
             <a href="#" onclick="signOutAndRedirect(); return false;">Logout</a>
         </nav>
@@ -129,7 +130,186 @@ function render_footer(): void
 { ?>
     <div class="divider">✦ ✦ ✦ End of Trailblaze Log ✦ ✦ ✦</div>
     <div class="footer">
-        <span>FROST · PETAL · v2.4 · CHECKLIST MERCH</span>
+        <span>FROST · PETAL · v2.5 · CHECKLIST MERCH</span>
         <span>Made with ❄ &amp; ✿ for March 7th fans</span>
+    </div>
+<?php }
+
+function render_product_toolbar(): void
+{ ?>
+    <div class="toolbar-sentinel" aria-hidden="true"></div>
+    <div class="toolbar">
+        <button class="btn-add" id="btn-add-product"><span class="lbl-full">Thêm Sản Phẩm Mới</span><span class="lbl-short">Thêm mới</span></button>
+
+        <div class="filters">
+            <select id="filter-category" class="fld fld-select" onchange="loadData()">
+                <option value="">-- Tất cả Category --</option>
+            </select>
+
+            <input type="number" id="min-price" class="fld" placeholder="Giá từ…" oninput="loadData()">
+            <input type="number" id="max-price" class="fld" placeholder="Đến giá…" oninput="loadData()">
+
+            <select id="filter-status" class="fld fld-select" onchange="loadData()">
+                <option value="">-- Trạng thái --</option>
+                <option value="1">Đã mua</option>
+                <option value="0">Chưa mua</option>
+            </select>
+
+            <select id="sort-by" class="fld fld-select" onchange="loadData()">
+                <option value="ngay_them-DESC">Mới nhất trước</option>
+                <option value="ngay_them-ASC">Cũ nhất trước</option>
+                <option value="gia-ASC">Giá tăng dần</option>
+                <option value="gia-DESC">Giá giảm dần</option>
+                <option value="ten_san_pham-ASC">Tên (A-Z)</option>
+                <option value="ten_nhan_vat-ASC">Nhân vật (A-Z)</option>
+                <option value="so_luong-DESC">Số lượng (Giảm dần)</option>
+                <option value="so_luong-ASC">Số lượng (Tăng dần)</option>
+            </select>
+        </div>
+
+        <div class="search-bar">
+            <svg class="search-ic" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/>
+                <path d="M20 20 L16 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+            <input type="text" id="search-char" class="search-input" placeholder="Tìm nhân vật, sản phẩm, shop…" autocomplete="off">
+            <button type="button" class="search-clear" id="search-clear" aria-label="Xoá tìm kiếm" hidden>✕</button>
+        </div>
+    </div>
+<?php }
+
+function render_product_modal(): void
+{ ?>
+    <div id="product-modal" class="modal-overlay">
+        <div class="pm-petals" aria-hidden="true">
+            <?php for ($i = 0; $i < 14; $i++): ?>
+                <span class="pm-petal" style="left: <?= ($i * 7) % 100 ?>%; animation-delay: <?= -$i * 0.7 ?>s; animation-duration: <?= 7 + ($i % 5) ?>s;"></span>
+            <?php endfor; ?>
+        </div>
+
+        <div class="modal-content" id="draggable-modal">
+            <header class="modal-header" id="modal-drag-handle">
+                <div class="pm-head-left">
+                    <div class="pm-head-icon">✿</div>
+                    <div>
+                        <div class="pm-eyebrow" id="modal-eyebrow">NEW · MERCH</div>
+                        <h2 id="modal-title">Thêm Sản Phẩm Mới</h2>
+                    </div>
+                </div>
+                <button type="button" class="close-btn" onclick="closeModal()" aria-label="Đóng">✕</button>
+            </header>
+
+            <div class="modal-body">
+                <form id="product-form" onsubmit="submitForm(event)">
+                    <input type="hidden" id="form-id" name="id">
+                    <input type="hidden" id="form-glyph" name="glyph" value="✿">
+
+                    <div class="pm-field pm-col-2">
+                        <label class="pm-lbl" for="form-ten">Tên sản phẩm <span class="pm-req">*</span></label>
+                        <input id="form-ten" name="ten_san_pham" class="pm-input" type="text"
+                               placeholder="VD: Standee March 7th Mùa Hè" required>
+                    </div>
+
+                    <div class="pm-field pm-col-2">
+                        <label class="pm-lbl" for="form-gia">Giá (VNĐ) <span class="pm-req">*</span></label>
+                        <div class="pm-input-wrap">
+                            <input id="form-gia" name="gia" class="pm-input"
+                                   type="text" inputmode="decimal" autocomplete="off"
+                                   placeholder="VD: 150k hoặc 150000" required>
+                            <span class="pm-suffix">₫</span>
+                        </div>
+                        <div class="pm-quick-money" id="pm-quick-money" role="group" aria-label="Cộng nhanh số tiền">
+                            <?php foreach ([10, 20, 50, 100, 200, 500] as $k): ?>
+                                <button type="button" class="pm-money-chip" data-add="<?= $k * 1000 ?>">+<?= $k ?>k</button>
+                            <?php endforeach; ?>
+                            <button type="button" class="pm-money-chip pm-money-clear" data-clear="1" title="Xoá">✕</button>
+                        </div>
+                        <div class="pm-money-preview" id="pm-money-preview" aria-live="polite">= 0 ₫</div>
+                    </div>
+
+                    <div class="pm-field">
+                        <label class="pm-lbl">Số lượng</label>
+                        <div class="pm-stepper">
+                            <button type="button" class="pm-step" id="qty-dec" aria-label="Giảm">−</button>
+                            <input id="form-soluong" name="so_luong" class="pm-input pm-input-center"
+                                   type="number" min="1" value="1" required>
+                            <button type="button" class="pm-step" id="qty-inc" aria-label="Tăng">+</button>
+                        </div>
+                    </div>
+
+                    <div class="pm-field">
+                        <label class="pm-lbl" for="form-category">Danh mục</label>
+                        <select id="form-category" name="category_id" class="pm-input pm-select"></select>
+                    </div>
+
+                    <div class="pm-field">
+                        <label class="pm-lbl" for="form-nhanvat">Nhân vật</label>
+                        <input id="form-nhanvat" name="ten_nhan_vat" class="pm-input" type="text"
+                               placeholder="VD: March 7th, Evernight, Kafka…">
+                    </div>
+
+                    <div class="pm-field">
+                        <label class="pm-lbl" for="form-shop">Tên shop bán</label>
+                        <input id="form-shop" name="shop_ban" class="pm-input" type="text"
+                               placeholder="VD: Shop Mihoyo, Taobao…">
+                    </div>
+
+                    <div class="pm-field pm-col-2">
+                        <label class="pm-lbl" for="form-nguoimua">Người mua</label>
+                        <input id="form-nguoimua" name="nguoi_mua" class="pm-input" type="text"
+                               placeholder="Nhập tên người mua…">
+                    </div>
+
+                    <div class="pm-field pm-col-2">
+                        <label class="pm-lbl">Biểu tượng</label>
+                        <div class="pm-glyphs" id="glyph-picker" role="radiogroup">
+                            <?php foreach (["✿", "❀", "🌸", "❄", "✦", "✧", "★", "♡"] as $g): ?>
+                                <button type="button" class="pm-glyph" data-glyph="<?= htmlspecialchars($g, ENT_QUOTES) ?>" role="radio"><?= $g ?></button>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+
+                    <div class="pm-field pm-col-2">
+                        <label class="pm-lbl">Hình ảnh</label>
+                        <div class="pm-drop" id="pm-drop">
+                            <div class="pm-drop-default" id="pm-drop-default">
+                                <div class="pm-drop-ico">
+                                    <svg width="42" height="42" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <defs>
+                                            <linearGradient id="pm-up" x1="0" x2="1" y1="0" y2="1">
+                                                <stop offset="0%" stop-color="#ff7eb0"/>
+                                                <stop offset="100%" stop-color="#6fc7ff"/>
+                                            </linearGradient>
+                                        </defs>
+                                        <circle cx="12" cy="12" r="11" fill="rgba(255,126,176,0.08)" stroke="url(#pm-up)" stroke-width="1.4" stroke-dasharray="2 3"/>
+                                        <path d="M12 7 V16 M8 11 L12 7 L16 11" stroke="url(#pm-up)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                                    </svg>
+                                </div>
+                                <div class="pm-drop-text">
+                                    <b>Click hoặc kéo ảnh vào đây</b>
+                                    <span>PNG · JPG · WebP — tối đa 5MB</span>
+                                </div>
+                            </div>
+                            <div class="pm-drop-prev" id="pm-drop-prev" hidden>
+                                <img id="pm-prev-img" src="" alt="">
+                                <div class="pm-drop-meta">
+                                    <div class="pm-drop-name" id="pm-prev-name">—</div>
+                                    <div class="pm-drop-size" id="pm-prev-size">— · Click hoặc kéo file khác để thay</div>
+                                </div>
+                                <button type="button" class="pm-drop-x" id="pm-drop-x" aria-label="Xoá ảnh">×</button>
+                            </div>
+                            <input id="form-hinh" name="hinh_san_pham" type="file" accept="image/*" hidden>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <footer class="modal-footer">
+                <button type="button" class="pm-btn pm-cancel" onclick="closeModal()">Hủy</button>
+                <button type="button" class="pm-btn pm-save" onclick="submitForm()">
+                    ✦ <span id="save-label">Lưu Dữ Liệu</span>
+                </button>
+            </footer>
+        </div>
     </div>
 <?php }

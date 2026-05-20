@@ -25,7 +25,6 @@ const MARCH_GROUP = ['march 7th', 'evernight'];
 const PRODUCT_IMAGE_BUCKET = 'product-images';
 
 let CATEGORIES = [];
-let CAT_COUNTS = {};
 let ALL_PRODUCTS = [];
 let previewObjectUrl = '';
 
@@ -35,6 +34,46 @@ function isInMarchGroup(name) {
 
 function formatCurrency(number) {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(number) || 0);
+}
+
+/**
+ * Parse a money input that may use "k" shorthand.
+ * "10k" -> 10000, "1.5k" -> 1500, "150,000" -> 150000.
+ */
+function parseMoneyInput(raw) {
+    if (raw == null) return 0;
+    const cleaned = String(raw).trim().toLowerCase().replace(/[\s,_đvnd₫]+/g, '');
+    if (!cleaned) return 0;
+    const match = cleaned.match(/^(-?\d+(?:\.\d+)?)(k|m)?$/);
+    if (!match) {
+        const fallback = Number(cleaned.replace(/[^\d.-]/g, ''));
+        return Number.isFinite(fallback) ? Math.max(0, Math.round(fallback)) : 0;
+    }
+    const value = Number(match[1]);
+    if (!Number.isFinite(value)) return 0;
+    const multiplier = match[2] === 'm' ? 1_000_000 : match[2] === 'k' ? 1000 : 1;
+    return Math.max(0, Math.round(value * multiplier));
+}
+
+function updateMoneyPreview() {
+    const input = document.getElementById('form-gia');
+    const preview = document.getElementById('pm-money-preview');
+    if (!input || !preview) return;
+    preview.textContent = `= ${formatCurrency(parseMoneyInput(input.value))}`;
+}
+
+function setMoneyInput(value) {
+    const input = document.getElementById('form-gia');
+    if (!input) return;
+    const amount = Math.max(0, Math.round(Number(value) || 0));
+    input.value = amount === 0 ? '' : String(amount);
+    updateMoneyPreview();
+}
+
+function addToMoneyInput(delta) {
+    const input = document.getElementById('form-gia');
+    if (!input) return;
+    setMoneyInput(parseMoneyInput(input.value) + Number(delta || 0));
 }
 
 function pickGlyph(catName) {
@@ -221,10 +260,10 @@ function openModal(isEdit = false, productData = null) {
         saveLbl.textContent = 'Cập nhật';
         document.getElementById('form-id').value = productData.id;
         document.getElementById('form-ten').value = productData.ten_san_pham || '';
-        document.getElementById('form-gia').value = productData.gia || '';
+        setMoneyInput(productData.gia || 0);
         document.getElementById('form-soluong').value = productData.so_luong || 1;
         document.getElementById('form-category').value = productData.category_id || '';
-        document.getElementById('form-nhanvat').value = productData.ten_nhan_vat || 'March 7th';
+        document.getElementById('form-nhanvat').value = productData.ten_nhan_vat || '';
         document.getElementById('form-shop').value = productData.shop_ban || '';
         document.getElementById('form-nguoimua').value = productData.nguoi_mua || '';
         document.getElementById('form-glyph').value = productData.glyph || '✿';
@@ -238,7 +277,8 @@ function openModal(isEdit = false, productData = null) {
         document.getElementById('form-id').value = '';
         document.getElementById('form-glyph').value = '✿';
         document.getElementById('form-soluong').value = 1;
-        if (isMarch7thPage) document.getElementById('form-nhanvat').value = 'March 7th';
+        setMoneyInput(0);
+        if (isMarch7thPage()) document.getElementById('form-nhanvat').value = 'March 7th';
         syncGlyphPicker();
         resetDropZone();
     }
@@ -309,7 +349,7 @@ async function submitForm(e) {
         const categoryValue = document.getElementById('form-category').value;
         const payload = {
             ten_san_pham: document.getElementById('form-ten').value.trim(),
-            gia: Number(document.getElementById('form-gia').value || 0),
+            gia: parseMoneyInput(document.getElementById('form-gia').value),
             so_luong: Math.max(1, Number(document.getElementById('form-soluong').value || 1)),
             category_id: categoryValue ? Number(categoryValue) : null,
             ten_nhan_vat: document.getElementById('form-nhanvat').value.trim() || null,
@@ -326,7 +366,6 @@ async function submitForm(e) {
         if (result.error) throw result.error;
         closeModal();
         await loadData();
-        await loadCategoryCounts();
         alert('Đã lưu dữ liệu thành công!');
     } catch (error) {
         console.error('Lỗi khi lưu dữ liệu:', error);
@@ -345,7 +384,6 @@ async function deleteProduct(id) {
         const { error } = await supabase.from('products').delete().eq('id', id);
         if (error) throw error;
         await loadData();
-        await loadCategoryCounts();
     } catch (error) {
         console.error('Lỗi xóa:', error);
         alert(`Lỗi xóa: ${error.message}`);
@@ -369,38 +407,9 @@ async function loadCategories() {
 
         if (filterSelect) filterSelect.innerHTML = filterHtml;
         if (formSelect) formSelect.innerHTML = formHtml;
-        renderCatBar();
     } catch (error) {
         console.error('Lỗi tải danh mục:', error);
     }
-}
-
-async function loadCategoryCounts() {
-    try {
-        const scoped = getScopedProducts(ALL_PRODUCTS);
-        CAT_COUNTS = { all: scoped.length };
-        for (const p of scoped) {
-            const cid = p.category_id;
-            if (cid != null) CAT_COUNTS[cid] = (CAT_COUNTS[cid] || 0) + 1;
-        }
-        renderCatBar();
-    } catch (error) {
-        console.error('Lỗi đếm category:', error);
-    }
-}
-
-function renderCatBar() {
-    const bar = document.getElementById('cat-bar');
-    if (!bar) return;
-    const active = document.getElementById('filter-category')?.value || '';
-
-    let html = `<button type="button" class="cat-chip" data-cat="" data-active="${active === '' ? 'true' : 'false'}">✦ Tất cả <span class="num">${CAT_COUNTS.all ?? 0}</span></button>`;
-    CATEGORIES.forEach(cat => {
-        const count = CAT_COUNTS[cat.id] ?? 0;
-        const isActive = String(active) === String(cat.id);
-        html += `<button type="button" class="cat-chip" data-cat="${cat.id}" data-active="${isActive ? 'true' : 'false'}">${escapeHtml(cat.ten_danh_muc)} <span class="num">${count}</span></button>`;
-    });
-    bar.innerHTML = html;
 }
 
 function wireEvents() {
@@ -437,17 +446,27 @@ function wireEvents() {
             return;
         }
 
-        const chip = e.target.closest('#cat-bar .cat-chip');
-        if (chip) {
-            const cid = chip.dataset.cat;
-            const sel = document.getElementById('filter-category');
-            sel.value = cid;
-            document.querySelectorAll('#cat-bar .cat-chip').forEach(c => {
-                c.setAttribute('data-active', c.dataset.cat === cid ? 'true' : 'false');
-            });
-            loadData();
+        const moneyChip = e.target.closest('#pm-quick-money .pm-money-chip');
+        if (moneyChip) {
+            if (moneyChip.dataset.clear === '1') {
+                setMoneyInput(0);
+            } else {
+                addToMoneyInput(Number(moneyChip.dataset.add || 0));
+            }
+            return;
         }
     });
+
+    document.addEventListener('input', (e) => {
+        if (e.target.id === 'form-gia') updateMoneyPreview();
+    });
+    document.addEventListener('blur', (e) => {
+        if (e.target.id === 'form-gia') {
+            const parsed = parseMoneyInput(e.target.value);
+            e.target.value = parsed === 0 ? '' : String(parsed);
+            updateMoneyPreview();
+        }
+    }, true);
 
     document.addEventListener('change', async (e) => {
         if (e.target.id === 'form-hinh') {
@@ -584,7 +603,6 @@ export async function initApp() {
 
     await loadCategories();
     await loadData();
-    await loadCategoryCounts();
 }
 
 window.loadData = loadData;

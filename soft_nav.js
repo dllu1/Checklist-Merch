@@ -1,4 +1,4 @@
-const PAGE_FILES = new Set(['index', 'march7th', 'dashboard']);
+const PAGE_FILES = new Set(['index', 'march7th', 'dashboard', 'categories']);
 const CONTENT_SELECTOR = '.container';
 
 function urlPageKey(pathname) {
@@ -34,6 +34,9 @@ async function callPageInit(pageKey) {
         if (pageKey === 'dashboard') {
             const mod = await import('./dashboard.js');
             await mod.initDashboard();
+        } else if (pageKey === 'categories') {
+            const mod = await import('./categories.js');
+            await mod.initCategoriesPage();
         } else {
             const mod = await import('./app.js');
             await mod.initApp();

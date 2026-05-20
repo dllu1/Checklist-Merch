@@ -8,7 +8,7 @@ $dist = Join-Path $root "dist"
 if (Test-Path $dist) { Remove-Item $dist -Recurse -Force }
 New-Item -ItemType Directory -Force -Path $dist | Out-Null
 
-$pages = @('index', 'login', 'dashboard', 'march7th')
+$pages = @('index', 'login', 'dashboard', 'march7th', 'categories')
 
 foreach ($p in $pages) {
     Write-Host "Rendering $p.php..."
@@ -27,6 +27,7 @@ $assets = @(
     'style.css',
     'app.js',
     'dashboard.js',
+    'categories.js',
     'music_player.js',
     'soft_nav.js',
     'storage_files.js',

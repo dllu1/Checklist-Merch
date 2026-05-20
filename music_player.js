@@ -308,6 +308,12 @@ function updateLoopUI() {
 
 fab.addEventListener('click', () => card.classList.toggle('open'));
 closeBtn.addEventListener('click', () => card.classList.remove('open'));
+document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape' || !card.classList.contains('open')) return;
+    const productModal = document.getElementById('product-modal');
+    if (productModal && productModal.classList.contains('active')) return;
+    card.classList.remove('open');
+});
 playBtn.addEventListener('click', () => (playing ? pause() : play()));
 prevBtn.addEventListener('click', async () => {
     if (tracks.length === 0) return;
