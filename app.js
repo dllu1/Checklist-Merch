@@ -52,9 +52,10 @@ function pickGlyph(catName) {
 }
 
 function getScopedProducts(products) {
-    return products.filter(p => isMarch7thPage
-        ? isInMarchGroup(p.ten_nhan_vat)
-        : !isInMarchGroup(p.ten_nhan_vat));
+    if (isMarch7thPage) {
+        return products.filter(p => isInMarchGroup(p.ten_nhan_vat));
+    }
+    return products;
 }
 
 function applyFilters(products) {
