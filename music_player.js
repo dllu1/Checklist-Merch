@@ -96,10 +96,13 @@ function renderPlaylist() {
 
     [playBtn, prevBtn, nextBtn, seek].forEach(el => { el.disabled = false; });
     playlistList.innerHTML = tracks.map((track, i) => `
-        <button type="button" class="mp-playlist-item${i === index ? ' active' : ''}" data-index="${i}">
-            <span class="mp-track-name">${escapeHtml(track.title)}</span>
-            <span class="mp-track-action">${i === index ? 'Đang chọn' : 'Phát'}</span>
-        </button>
+        <div class="mp-playlist-item${i === index ? ' active' : ''}">
+            <button type="button" class="mp-track-select" data-index="${i}" title="Phát">
+                <span class="mp-track-name">${escapeHtml(track.title)}</span>
+                <span class="mp-track-action">${i === index ? 'Đang chọn' : 'Phát'}</span>
+            </button>
+            <button type="button" class="mp-track-delete" data-index="${i}" title="Xóa khỏi storage" aria-label="Xóa ${escapeHtml(track.title)}">×</button>
+        </div>
     `).join('');
 }
 
@@ -288,10 +291,43 @@ seek.addEventListener('change', () => {
     isSeeking = false;
     updateRangeFill(seek);
 });
+async function deleteTrackAt(targetIndex) {
+    const track = tracks[targetIndex];
+    if (!track) return;
+    if (!confirm(`Xóa "${track.title}" khỏi storage? Hành động này không thể hoàn tác.`)) return;
+
+    setUploadStatus(`Đang xóa "${track.title}"...`, '');
+    try {
+        const { error } = await supabase.storage.from(AUDIO_BUCKET).remove([track.path]);
+        if (error) throw error;
+
+        const wasCurrent = targetIndex === index;
+        if (wasCurrent) {
+            audio.pause();
+            audio.removeAttribute('src');
+            audio.load();
+            setPlaying(false);
+        }
+        if (targetIndex < index) index -= 1;
+
+        await refreshAudioLibrary();
+        setUploadStatus(`Đã xóa "${track.title}".`, 'success');
+    } catch (error) {
+        console.error('Delete failed:', error);
+        setUploadStatus(error.message || 'Xóa thất bại.', 'error');
+    }
+}
+
 playlistList.addEventListener('click', async (event) => {
-    const item = event.target.closest('.mp-playlist-item');
-    if (!item) return;
-    index = Number(item.dataset.index || 0);
+    const deleteBtn = event.target.closest('.mp-track-delete');
+    if (deleteBtn) {
+        event.stopPropagation();
+        await deleteTrackAt(Number(deleteBtn.dataset.index || 0));
+        return;
+    }
+    const selectBtn = event.target.closest('.mp-track-select');
+    if (!selectBtn) return;
+    index = Number(selectBtn.dataset.index || 0);
     await loadTrack();
     play();
 });

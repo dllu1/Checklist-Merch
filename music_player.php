@@ -273,17 +273,53 @@
         border-radius: 12px;
         background: rgba(255, 255, 255, 0.48);
         color: #3a2a55;
-        cursor: pointer;
         display: grid;
         grid-template-columns: 1fr auto;
-        gap: 8px;
+        align-items: center;
+        gap: 4px;
         min-height: 36px;
-        padding: 8px 10px;
-        text-align: left;
+        padding: 4px 4px 4px 0;
+        overflow: hidden;
     }
     .mp-playlist-item.active {
         background: linear-gradient(135deg, rgba(255, 126, 176, 0.18), rgba(111, 199, 255, 0.16));
         border-color: rgba(255, 126, 176, 0.4);
+        color: #d94f86;
+    }
+    .mp-track-select {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        align-items: center;
+        width: 100%;
+        min-width: 0;
+        background: transparent;
+        border: 0;
+        color: inherit;
+        cursor: pointer;
+        text-align: left;
+        padding: 4px 4px 4px 10px;
+        font: inherit;
+    }
+    .mp-track-delete {
+        width: 26px;
+        height: 26px;
+        flex-shrink: 0;
+        border: 1px solid rgba(122, 104, 184, 0.14);
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.5);
+        color: #9e8ec0;
+        cursor: pointer;
+        font-size: 15px;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 160ms, color 160ms, border-color 160ms;
+    }
+    .mp-track-delete:hover {
+        background: rgba(217, 79, 134, 0.12);
+        border-color: rgba(217, 79, 134, 0.4);
         color: #d94f86;
     }
     .mp-track-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 600; }
