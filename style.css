@@ -473,7 +473,8 @@ nav a.active {
 }
 @media (max-width: 880px) {
     .cat-row { flex-direction: column; align-items: stretch; }
-    .cat-row .search-bar { flex: 1 1 auto; width: 100%; }
+    .cat-row .search-bar,
+    .toolbar.compact .search-bar { flex: 0 0 auto; width: 100%; }
 }
 
 /* Realtime search bar — searches by character name (ten_nhan_vat) */

@@ -56,7 +56,7 @@ function getScopedProducts(products) {
     if (isMarch7thPage()) {
         return products.filter(p => isInMarchGroup(p.ten_nhan_vat));
     }
-    return products;
+    return products.filter(p => !isInMarchGroup(p.ten_nhan_vat));
 }
 
 function applyFilters(products) {
@@ -71,7 +71,10 @@ function applyFilters(products) {
         if (minPrice !== '' && Number(p.gia) < Number(minPrice)) return false;
         if (maxPrice !== '' && Number(p.gia) > Number(maxPrice)) return false;
         if (status !== '' && Number(p.da_mua ? 1 : 0) !== Number(status)) return false;
-        if (search !== '' && !String(p.ten_nhan_vat || '').toLowerCase().includes(search)) return false;
+        if (search !== '') {
+            const hay = `${p.ten_nhan_vat || ''} ${p.ten_san_pham || ''} ${p.shop_ban || ''} ${p.nguoi_mua || ''}`.toLowerCase();
+            if (!hay.includes(search)) return false;
+        }
         return true;
     });
 }
@@ -492,34 +495,35 @@ function wireEvents() {
         }
     });
 
-    const addBtn = document.getElementById('btn-add-product');
-    if (addBtn) addBtn.addEventListener('click', () => openModal(false));
-
-    const overlayEl = document.getElementById('product-modal');
-    if (overlayEl) {
-        overlayEl.addEventListener('mousedown', (e) => {
-            if (e.target === overlayEl) closeModal();
-        });
-    }
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('#btn-add-product')) {
+            openModal(false);
+            return;
+        }
+        const overlayEl = document.getElementById('product-modal');
+        if (overlayEl && e.target === overlayEl && overlayEl.classList.contains('active')) {
+            closeModal();
+        }
+    });
 
     let searchDebounceTimer = null;
-    const searchInput = document.getElementById('search-char');
-    const searchClearBtn = document.getElementById('search-clear');
-    if (searchInput) {
-        searchInput.addEventListener('input', () => {
-            if (searchClearBtn) searchClearBtn.hidden = searchInput.value === '';
+    document.addEventListener('input', (e) => {
+        if (e.target.id === 'search-char') {
+            const clearBtn = document.getElementById('search-clear');
+            if (clearBtn) clearBtn.hidden = e.target.value === '';
             clearTimeout(searchDebounceTimer);
             searchDebounceTimer = setTimeout(loadData, 250);
-        });
-    }
-    if (searchClearBtn) {
-        searchClearBtn.addEventListener('click', () => {
-            searchInput.value = '';
-            searchClearBtn.hidden = true;
-            searchInput.focus();
+        }
+    });
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('#search-clear')) {
+            const input = document.getElementById('search-char');
+            const clearBtn = document.getElementById('search-clear');
+            if (input) { input.value = ''; input.focus(); }
+            if (clearBtn) clearBtn.hidden = true;
             loadData();
-        });
-    }
+        }
+    });
 
     window.addEventListener('scroll', () => {
         const toolbar = document.querySelector('.toolbar');
