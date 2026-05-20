@@ -22,7 +22,7 @@ require __DIR__ . '/_layout.php';
     <?php render_product_toolbar(); ?>
 
     <div class="sec-head">
-        <h2>Bộ sưu tập March 7th <span class="count" id="product-count">0 MÓN</span></h2>
+        <h2>Bộ sưu tập <span data-theme-text data-light-text="March 7th" data-dark-text="Evernight">March 7th</span> <span class="count" id="product-count">0 MÓN</span></h2>
         <div class="legend">
             <span><span class="swatch" style="background: var(--pink)"></span> March 7th</span>
             <span><span class="swatch" style="background: var(--mint)"></span> Đã mua</span>

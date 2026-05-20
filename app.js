@@ -520,11 +520,6 @@ function wireEvents() {
     document.addEventListener('click', (e) => {
         if (e.target.closest('#btn-add-product')) {
             openModal(false);
-            return;
-        }
-        const overlayEl = document.getElementById('product-modal');
-        if (overlayEl && e.target === overlayEl && overlayEl.classList.contains('active')) {
-            closeModal();
         }
     });
 

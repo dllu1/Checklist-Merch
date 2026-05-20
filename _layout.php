@@ -10,8 +10,13 @@ function render_bg(): void
     <script>
         (function () {
             try {
+                const cookieTheme = document.cookie
+                    .split('; ')
+                    .find(row => row.startsWith('merch_theme='))
+                    ?.split('=')[1];
+                const storedTheme = cookieTheme ? decodeURIComponent(cookieTheme) : localStorage.getItem('merch-theme');
                 document.documentElement.dataset.theme =
-                    localStorage.getItem('merch-theme') === 'evernight' ? 'evernight' : 'light';
+                    storedTheme === 'evernight' ? 'evernight' : 'light';
             } catch (error) {
                 document.documentElement.dataset.theme = 'light';
             }
@@ -104,12 +109,12 @@ function render_hero(string $active, string $title, string $subtitle): void
     <header class="hero">
         <?php render_crest(); ?>
         <div class="eyebrow">FROST<span class="dot"></span>PETAL<span class="dot"></span>COSMODYSSEY</div>
-        <h1><?= htmlspecialchars($title, ENT_QUOTES, 'UTF-8') ?></h1>
+        <h1<?= $active === 'march' ? ' data-theme-text data-light-text="March 7th" data-dark-text="Evernight"' : '' ?>><?= htmlspecialchars($title, ENT_QUOTES, 'UTF-8') ?></h1>
         <p class="subtitle"><?= $subtitle ?></p>
         <div class="theme-bar" aria-label="Giao diện">
             <button type="button" class="theme-toggle" data-theme-toggle aria-pressed="false">
                 <span class="theme-toggle-ic" aria-hidden="true"></span>
-                <span data-theme-label>Light</span>
+                <span data-theme-label>March 7th</span>
             </button>
         </div>
         <nav>

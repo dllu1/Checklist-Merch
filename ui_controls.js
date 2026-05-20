@@ -1,7 +1,25 @@
 const THEME_KEY = 'merch-theme';
+const THEME_COOKIE = 'merch_theme';
 const DARK_THEME = 'evernight';
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
+
+function getCookie(name) {
+    const prefix = `${encodeURIComponent(name)}=`;
+    return document.cookie
+        .split('; ')
+        .find(row => row.startsWith(prefix))
+        ?.slice(prefix.length) || '';
+}
+
+function setCookie(name, value, maxAge = COOKIE_MAX_AGE) {
+    const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+    document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; Max-Age=${maxAge}; Path=/; SameSite=Lax${secure}`;
+}
 
 function getStoredTheme() {
+    const cookieTheme = decodeURIComponent(getCookie(THEME_COOKIE));
+    if (cookieTheme === DARK_THEME || cookieTheme === 'light') return cookieTheme;
+
     try {
         return localStorage.getItem(THEME_KEY) === DARK_THEME ? DARK_THEME : 'light';
     } catch {
@@ -17,10 +35,16 @@ function setTheme(theme) {
     } catch {
         // localStorage may be unavailable in private contexts.
     }
+    setCookie(THEME_COOKIE, next);
 
     document.querySelectorAll('[data-theme-toggle]').forEach(button => {
         button.setAttribute('aria-pressed', next === DARK_THEME ? 'true' : 'false');
-        button.querySelector('[data-theme-label]').textContent = next === DARK_THEME ? 'Evernight' : 'Light';
+        button.querySelector('[data-theme-label]').textContent = next === DARK_THEME ? 'Evernight' : 'March 7th';
+    });
+
+    document.querySelectorAll('[data-theme-text]').forEach(element => {
+        const text = next === DARK_THEME ? element.dataset.darkText : element.dataset.lightText;
+        if (text) element.textContent = text;
     });
 }
 

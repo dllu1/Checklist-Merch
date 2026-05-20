@@ -24,7 +24,7 @@ require __DIR__ . '/_layout.php';
         <div class="theme-bar" aria-label="Giao diện">
             <button type="button" class="theme-toggle" data-theme-toggle aria-pressed="false">
                 <span class="theme-toggle-ic" aria-hidden="true"></span>
-                <span data-theme-label>Light</span>
+                <span data-theme-label>March 7th</span>
             </button>
         </div>
 

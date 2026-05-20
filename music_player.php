@@ -357,6 +357,99 @@
     }
     .mp-upload-status[data-tone="error"] { color: #d94f86; }
     .mp-upload-status[data-tone="success"] { color: #3a8f76; }
+    html[data-theme="evernight"] .mp-fab {
+        background: linear-gradient(135deg, #ff5f7c 0%, #8b5cff 55%, #fff0ce 100%);
+        box-shadow: 0 18px 36px -16px rgba(255, 95, 124, 0.58), 0 6px 20px -10px rgba(139, 92, 255, 0.46);
+    }
+    html[data-theme="evernight"] .mp-fab-ring {
+        border-color: rgba(255, 240, 206, 0.42);
+    }
+    html[data-theme="evernight"] .mp-card {
+        background: rgba(21, 13, 32, 0.9);
+        border-color: rgba(233, 222, 255, 0.18);
+        box-shadow: 0 24px 70px -28px rgba(0, 0, 0, 0.82), 0 10px 26px -16px rgba(255, 95, 124, 0.42);
+        color: #fff3fb;
+    }
+    html[data-theme="evernight"] .mp-head,
+    html[data-theme="evernight"] .mp-playlist {
+        border-color: rgba(233, 222, 255, 0.16);
+    }
+    html[data-theme="evernight"] .mp-disc,
+    html[data-theme="evernight"] .mp-play {
+        background: linear-gradient(135deg, #ff5f7c 0%, #8b5cff 58%, #fff0ce 100%);
+    }
+    html[data-theme="evernight"] .mp-eyebrow,
+    html[data-theme="evernight"] .mp-playlist-title {
+        color: #ff6f90;
+    }
+    html[data-theme="evernight"] .mp-title,
+    html[data-theme="evernight"] .mp-track-name {
+        color: #fff3fb;
+    }
+    html[data-theme="evernight"] .mp-artist,
+    html[data-theme="evernight"] .mp-time,
+    html[data-theme="evernight"] .mp-playlist-count,
+    html[data-theme="evernight"] .mp-track-action,
+    html[data-theme="evernight"] .mp-empty,
+    html[data-theme="evernight"] .mp-upload-status {
+        color: #a99abe;
+    }
+    html[data-theme="evernight"] .mp-x,
+    html[data-theme="evernight"] .mp-track-delete {
+        background: rgba(255, 95, 124, 0.14);
+        color: #ffc9d6;
+        border-color: rgba(233, 222, 255, 0.14);
+    }
+    html[data-theme="evernight"] .mp-btn {
+        background: rgba(255, 243, 251, 0.08);
+        border-color: rgba(233, 222, 255, 0.16);
+        color: #d6c5ff;
+    }
+    html[data-theme="evernight"] .mp-btn.active {
+        background: linear-gradient(135deg, rgba(255, 95, 124, 0.22), rgba(139, 92, 255, 0.24));
+        border-color: rgba(255, 95, 124, 0.54);
+        color: #ff9bad;
+        box-shadow: 0 6px 16px -8px rgba(255, 95, 124, 0.55);
+    }
+    html[data-theme="evernight"] .mp-seek,
+    html[data-theme="evernight"] .mp-volume {
+        --mp-fill-color: #fff0ce;
+        --mp-empty-color: rgba(233, 222, 255, 0.16);
+    }
+    html[data-theme="evernight"] .mp-seek::-webkit-slider-thumb,
+    html[data-theme="evernight"] .mp-volume::-webkit-slider-thumb {
+        border-color: #1b1028;
+        background: linear-gradient(135deg, #ff5f7c, #8b5cff 62%, #fff0ce);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.42);
+    }
+    html[data-theme="evernight"] .mp-seek::-moz-range-thumb,
+    html[data-theme="evernight"] .mp-volume::-moz-range-thumb {
+        border-color: #1b1028;
+        background: linear-gradient(135deg, #ff5f7c, #8b5cff 62%, #fff0ce);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.42);
+    }
+    html[data-theme="evernight"] .mp-playlist-list::-webkit-scrollbar-thumb {
+        background: rgba(255, 95, 124, 0.34);
+    }
+    html[data-theme="evernight"] .mp-playlist-item {
+        background: rgba(255, 243, 251, 0.08);
+        border-color: rgba(233, 222, 255, 0.14);
+        color: #fff3fb;
+    }
+    html[data-theme="evernight"] .mp-playlist-item.active {
+        background: linear-gradient(135deg, rgba(255, 95, 124, 0.18), rgba(139, 92, 255, 0.2));
+        border-color: rgba(255, 95, 124, 0.42);
+        color: #ff9bad;
+    }
+    html[data-theme="evernight"] .mp-upload-btn {
+        background: linear-gradient(135deg, rgba(255, 95, 124, 0.12), rgba(139, 92, 255, 0.14));
+        border-color: rgba(255, 95, 124, 0.38);
+        color: #ff9bad;
+    }
+    html[data-theme="evernight"] .mp-upload-btn:hover {
+        background: linear-gradient(135deg, rgba(255, 95, 124, 0.18), rgba(139, 92, 255, 0.2));
+        border-color: rgba(255, 95, 124, 0.62);
+    }
     @media (max-width: 480px) {
         .mp-card { right: 12px; left: 12px; width: auto; bottom: 88px; }
         .mp-fab { right: 16px; bottom: 16px; }
