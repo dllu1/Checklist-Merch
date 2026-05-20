@@ -1,3 +1,5 @@
+import { initCustomSelects, initThemeControls } from './ui_controls.js';
+
 const PAGE_FILES = new Set(['index', 'march7th', 'dashboard', 'categories']);
 const CONTENT_SELECTOR = '.container';
 
@@ -70,6 +72,8 @@ async function navigate(url, { push = true } = {}) {
         document.title = doc.title;
         curContent.replaceWith(newContent);
         runScriptsIn(newContent);
+        initThemeControls(newContent);
+        initCustomSelects(newContent);
 
         if (push) history.pushState({ softNav: true, url: target }, '', target);
         window.scrollTo(0, 0);
@@ -106,3 +110,6 @@ window.addEventListener('popstate', () => {
 if (!history.state || !history.state.softNav) {
     history.replaceState({ softNav: true, url: location.href }, '', location.href);
 }
+
+initThemeControls();
+initCustomSelects();

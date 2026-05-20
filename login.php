@@ -21,6 +21,12 @@ require __DIR__ . '/_layout.php';
         <div class="eyebrow">FROST<span class="dot"></span>PETAL</div>
         <h1>Đăng nhập</h1>
         <p class="auth-subtitle">Truy cập checklist merch riêng tư.</p>
+        <div class="theme-bar" aria-label="Giao diện">
+            <button type="button" class="theme-toggle" data-theme-toggle aria-pressed="false">
+                <span class="theme-toggle-ic" aria-hidden="true"></span>
+                <span data-theme-label>Light</span>
+            </button>
+        </div>
 
         <form id="login-form" class="auth-form">
             <label>
@@ -52,6 +58,9 @@ require __DIR__ . '/_layout.php';
 </script>
 <script type="module">
     import { SUPABASE_CONFIGURED, supabase } from './supabase_client.js';
+    import { initThemeControls } from './ui_controls.js';
+
+    initThemeControls();
 
     const form = document.getElementById('login-form');
     const message = document.getElementById('login-message');

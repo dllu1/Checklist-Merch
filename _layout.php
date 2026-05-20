@@ -7,6 +7,16 @@ declare(strict_types=1);
 
 function render_bg(): void
 { ?>
+    <script>
+        (function () {
+            try {
+                document.documentElement.dataset.theme =
+                    localStorage.getItem('merch-theme') === 'evernight' ? 'evernight' : 'light';
+            } catch (error) {
+                document.documentElement.dataset.theme = 'light';
+            }
+        })();
+    </script>
     <div class="bg-wrap" aria-hidden="true">
         <div class="bg-grid"></div>
         <div class="bg-stars" id="bg-stars"></div>
@@ -96,6 +106,12 @@ function render_hero(string $active, string $title, string $subtitle): void
         <div class="eyebrow">FROST<span class="dot"></span>PETAL<span class="dot"></span>COSMODYSSEY</div>
         <h1><?= htmlspecialchars($title, ENT_QUOTES, 'UTF-8') ?></h1>
         <p class="subtitle"><?= $subtitle ?></p>
+        <div class="theme-bar" aria-label="Giao diện">
+            <button type="button" class="theme-toggle" data-theme-toggle aria-pressed="false">
+                <span class="theme-toggle-ic" aria-hidden="true"></span>
+                <span data-theme-label>Light</span>
+            </button>
+        </div>
         <nav>
             <a href="index.php"<?= $active === 'all' ? ' class="active"' : '' ?>>✦ Tất cả sản phẩm</a>
             <a href="march7th.php"<?= $active === 'march' ? ' class="active"' : '' ?>>✿ March 7th/Evernight</a>

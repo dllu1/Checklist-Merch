@@ -262,7 +262,9 @@ function openModal(isEdit = false, productData = null) {
         document.getElementById('form-ten').value = productData.ten_san_pham || '';
         setMoneyInput(productData.gia || 0);
         document.getElementById('form-soluong').value = productData.so_luong || 1;
-        document.getElementById('form-category').value = productData.category_id || '';
+        const categorySelect = document.getElementById('form-category');
+        categorySelect.value = productData.category_id || '';
+        categorySelect.dispatchEvent(new Event('change', { bubbles: true }));
         document.getElementById('form-nhanvat').value = productData.ten_nhan_vat || '';
         document.getElementById('form-shop').value = productData.shop_ban || '';
         document.getElementById('form-nguoimua').value = productData.nguoi_mua || '';
@@ -277,6 +279,7 @@ function openModal(isEdit = false, productData = null) {
         document.getElementById('form-id').value = '';
         document.getElementById('form-glyph').value = '✿';
         document.getElementById('form-soluong').value = 1;
+        document.getElementById('form-category').dispatchEvent(new Event('change', { bubbles: true }));
         setMoneyInput(0);
         if (isMarch7thPage()) document.getElementById('form-nhanvat').value = 'March 7th';
         syncGlyphPicker();
