@@ -18,7 +18,7 @@ import {
 } from './storage_files.js';
 
 const currentPath = window.location.pathname;
-const isMarch7thPage = currentPath.includes('march7th.php') || currentPath.includes('march7th.html');
+const isMarch7thPage = /(?:^|\/)march7th(?:\.php|\.html)?(?:[/?#]|$)/i.test(currentPath);
 
 const MARCH_GROUP = ['march 7th', 'evernight'];
 const PRODUCT_IMAGE_BUCKET = 'product-images';
