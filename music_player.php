@@ -114,7 +114,17 @@
         background: linear-gradient(135deg, #ff7eb0, #b3a3e8 50%, #6fc7ff);
         position: relative;
     }
-    .mp-disc::before { content: '✿'; color: #fff; font-size: 22px; }
+    .mp-disc::before {
+        content: '✿';
+        color: #fff;
+        font-size: 22px;
+        line-height: 1;
+        display: block;
+        width: 1em;
+        height: 1em;
+        text-align: center;
+        transform: translateY(-0.02em);
+    }
     .mp-disc.paused { animation-play-state: paused; }
     .mp-meta { min-width: 0; }
     .mp-eyebrow {
