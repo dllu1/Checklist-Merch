@@ -1,12 +1,15 @@
 import {
     SUPABASE_CONFIGURED,
-    supabase,
     requireSession,
     signOutAndRedirect,
     fetchProducts,
     fetchCategories,
     getSignedUrl,
     escapeHtml,
+    createProduct,
+    updateProduct,
+    deleteProductById,
+    uploadProductImageFile,
 } from './supabase_client.js';
 import {
     PRODUCT_IMAGE_RULES,
@@ -14,7 +17,6 @@ import {
     makeObjectUrl,
     revokeObjectUrl,
     buildStoragePath,
-    uploadBlob,
 } from './storage_files.js';
 
 function isMarch7thPage() {
@@ -218,11 +220,11 @@ async function renderProducts(products) {
                         ${nhanVatTag}
                         ${nguoiMuaTag}
                     </div>
-                    <button class="${badgeClass}" onclick="toggleBuyStatus(${p.id}, ${nextStatus})">${badgeText}</button>
+                    <button class="${badgeClass}" onclick="toggleBuyStatus('${escapeHtml(p.id)}', ${nextStatus})">${badgeText}</button>
                 </div>
                 <div class="card-actions">
-                    <button class="btn-edit-card" onclick="editProduct(${p.id})">✎ Sửa</button>
-                    <button class="btn-delete-card" onclick="deleteProduct(${p.id})">✕ Xóa</button>
+                    <button class="btn-edit-card" onclick="editProduct('${escapeHtml(p.id)}')">✎ Sửa</button>
+                    <button class="btn-delete-card" onclick="deleteProduct('${escapeHtml(p.id)}')">✕ Xóa</button>
                 </div>
             </article>
         `;
@@ -233,11 +235,7 @@ async function renderProducts(products) {
 
 async function toggleBuyStatus(id, newStatus) {
     try {
-        const { error } = await supabase
-            .from('products')
-            .update({ da_mua: newStatus === 1 })
-            .eq('id', id);
-        if (error) throw error;
+        await updateProduct(id, { da_mua: newStatus === 1 });
         await loadData();
     } catch (error) {
         console.error('Lỗi:', error);
@@ -331,10 +329,7 @@ async function uploadProductImage(file) {
     if (!file) return '';
     const validated = await validateFile(file, PRODUCT_IMAGE_RULES);
     const path = buildStoragePath(file, 'products', validated.extension);
-    await uploadBlob(supabase.storage, PRODUCT_IMAGE_BUCKET, path, file, {
-        contentType: validated.contentType,
-        metadata: validated.metadata,
-    });
+    await uploadProductImageFile(path, file, validated.metadata);
     return path;
 }
 
@@ -345,7 +340,7 @@ async function submitForm(e) {
     if (!form.reportValidity()) return;
 
     try {
-        const id = Number(document.getElementById('form-id').value || 0);
+        const id = document.getElementById('form-id').value || '';
         const file = document.getElementById('form-hinh').files?.[0] || null;
         const imagePath = await uploadProductImage(file);
 
@@ -354,7 +349,7 @@ async function submitForm(e) {
             ten_san_pham: document.getElementById('form-ten').value.trim(),
             gia: parseMoneyInput(document.getElementById('form-gia').value),
             so_luong: Math.max(1, Number(document.getElementById('form-soluong').value || 1)),
-            category_id: categoryValue ? Number(categoryValue) : null,
+            category_id: categoryValue || null,
             ten_nhan_vat: document.getElementById('form-nhanvat').value.trim() || null,
             shop_ban: document.getElementById('form-shop').value.trim(),
             nguoi_mua: document.getElementById('form-nguoimua').value.trim() || null,
@@ -362,11 +357,8 @@ async function submitForm(e) {
 
         if (imagePath) payload.hinh_san_pham = imagePath;
 
-        const result = id > 0
-            ? await supabase.from('products').update(payload).eq('id', id)
-            : await supabase.from('products').insert({ ...payload, da_mua: false });
-
-        if (result.error) throw result.error;
+        if (id) await updateProduct(id, payload);
+        else await createProduct({ ...payload, da_mua: false });
         closeModal();
         await loadData();
         alert('Đã lưu dữ liệu thành công!');
@@ -377,15 +369,14 @@ async function submitForm(e) {
 }
 
 async function editProduct(id) {
-    const product = ALL_PRODUCTS.find(p => Number(p.id) === Number(id));
+    const product = ALL_PRODUCTS.find(p => String(p.id) === String(id));
     if (product) openModal(true, product);
 }
 
 async function deleteProduct(id) {
     if (!confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) return;
     try {
-        const { error } = await supabase.from('products').delete().eq('id', id);
-        if (error) throw error;
+        await deleteProductById(id);
         await loadData();
     } catch (error) {
         console.error('Lỗi xóa:', error);
@@ -588,7 +579,7 @@ let firstInitDone = false;
 
 export async function initApp() {
     if (!SUPABASE_CONFIGURED) {
-        showLoadError('Chưa cấu hình Supabase. Hãy cập nhật supabase-config.js.');
+        showLoadError('Chưa cấu hình Cloudflare API.');
         return;
     }
 

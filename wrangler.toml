@@ -1,0 +1,19 @@
+name = "merchmarch7th"
+pages_build_output_dir = "dist"
+
+[vars]
+R2_AUDIO_BUCKET_NAME = "merch-audio"
+R2_PRODUCT_IMAGES_BUCKET_NAME = "merch-product-images"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "merch_db"
+database_id = "79334d9c-7e24-4f4e-b2d0-6612324b4ad8"
+
+[[r2_buckets]]
+binding = "PRODUCT_IMAGES"
+bucket_name = "merch-product-images"
+
+[[r2_buckets]]
+binding = "AUDIO"
+bucket_name = "merch-audio"

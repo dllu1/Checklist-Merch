@@ -603,8 +603,8 @@ select.fld {
 .cs-arrow::before {
     content: '';
     position: absolute;
-    left: 5px;
-    top: 5px;
+    left: calc(50% - 3.5px);
+    top: calc(50% - 4px);
     width: 7px;
     height: 7px;
     border-right: 2px solid var(--select-arrow);
@@ -613,7 +613,7 @@ select.fld {
     transition: transform 180ms, top 180ms;
 }
 .custom-select[data-open="true"] .cs-arrow::before {
-    top: 7px;
+    top: calc(50% - 2px);
     transform: rotate(225deg);
 }
 .cs-menu {

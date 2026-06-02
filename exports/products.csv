@@ -1,0 +1,5 @@
+id,category_id,ten_san_pham,gia,so_luong,con_hang,da_mua,hinh_san_pham,ten_nhan_vat,shop_ban,nguoi_mua,ngay_mua,ngay_them
+1,2,Standee March 7th,200000.00,1,true,false,products/4e8319b8-f1a4-4dee-8d7f-975d19654ce7.jpg,March 7th,Taobao,Khoa,,2026-05-20 12:26:18.987975+00
+5,1,Card Sandbina,587000.00,1,true,false,,Sandbina Columbina,Mích,Mích,,2026-05-20 15:24:23.240357+00
+6,1,E9 GIFT,120000.00,1,true,false,products/249ba19d-340f-4a71-9cb6-288584841cf7.png,Evernight,Taobao,Baja Bella,,2026-05-20 15:55:31.085273+00
+7,3,Evernight Badge,85000.00,1,true,true,products/68ca2ade-04a1-4fc0-bcb3-ed860490bb92.png,Evernight,Taobao,Khoa,,2026-05-21 09:47:06.430226+00

@@ -1,14 +1,15 @@
 import {
     SUPABASE_CONFIGURED,
-    supabase,
     getSignedUrl,
     escapeHtml,
+    fetchAudioTracks,
+    uploadAudioFileToStorage,
+    deleteAudioTrack,
 } from './supabase_client.js';
 import {
     AUDIO_FILE_RULES,
     validateFile,
     buildStoragePath,
-    uploadBlob,
 } from './storage_files.js';
 
 const AUDIO_BUCKET = 'audio';
@@ -137,7 +138,7 @@ function renderPlaylist() {
     if (tracks.length === 0) {
         playlistList.innerHTML = '<div class="mp-empty">Chưa có file nhạc trong bucket audio.</div>';
         titleEl.textContent = 'Chưa có nhạc';
-        artistEl.textContent = 'Thêm file nhạc vào Supabase Storage bucket audio';
+        artistEl.textContent = 'Thêm file nhạc vào Cloudflare R2 audio';
         [playBtn, prevBtn, nextBtn, seek].forEach(el => { el.disabled = true; });
         return;
     }
@@ -166,7 +167,7 @@ async function loadTrack(resumeAt = 0) {
 
     audio.src = await getSignedUrl(AUDIO_BUCKET, track.path, 3600);
     titleEl.textContent = track.title;
-    artistEl.textContent = 'Frost & Petal · Supabase audio';
+    artistEl.textContent = 'Frost & Petal · Cloudflare R2 audio';
     seek.value = 0;
     updateRangeFill(seek);
     timeCur.textContent = '0:00';
@@ -196,25 +197,8 @@ function pause() {
 }
 
 async function listAudio(prefix = '') {
-    const { data, error } = await supabase.storage.from(AUDIO_BUCKET).list(prefix, {
-        limit: 100,
-        sortBy: { column: 'name', order: 'asc' },
-    });
-    if (error) throw error;
-
-    const files = [];
-    for (const item of data || []) {
-        const path = prefix ? `${prefix}/${item.name}` : item.name;
-        if (item.id === null) {
-            files.push(...await listAudio(path));
-            continue;
-        }
-        const ext = (item.name.split('.').pop() || '').toLowerCase();
-        if (AUDIO_EXTENSIONS.includes(ext)) {
-            files.push({ path, title: trackTitle(item.name) });
-        }
-    }
-    return files;
+    const files = await fetchAudioTracks();
+    return files.filter(file => AUDIO_EXTENSIONS.includes((file.path.split('.').pop() || '').toLowerCase()));
 }
 
 async function refreshAudioLibrary(selectedPath = '') {
@@ -249,18 +233,15 @@ async function uploadAudioFile(file) {
         setUploadStatus('Uploading audio...', '');
     }
 
-    await uploadBlob(supabase.storage, AUDIO_BUCKET, path, file, {
-        contentType: validated.contentType,
-        metadata: validated.metadata,
-    });
+    await uploadAudioFileToStorage(path, file, validated.metadata);
 
     await refreshAudioLibrary(path);
     setUploadStatus('Audio added.', 'success');
 }
 
 async function bootstrapMusic() {
-    if (!SUPABASE_CONFIGURED || !supabase) {
-        playlistList.innerHTML = '<div class="mp-empty">Chưa cấu hình Supabase.</div>';
+    if (!SUPABASE_CONFIGURED) {
+        playlistList.innerHTML = '<div class="mp-empty">Chưa cấu hình Cloudflare API.</div>';
         [playBtn, prevBtn, nextBtn, seek].forEach(el => { el.disabled = true; });
         if (uploadBtn) uploadBtn.disabled = true;
         return;
@@ -376,8 +357,7 @@ async function deleteTrackAt(targetIndex) {
 
     setUploadStatus(`Đang xóa "${track.title}"...`, '');
     try {
-        const { error } = await supabase.storage.from(AUDIO_BUCKET).remove([track.path]);
-        if (error) throw error;
+        await deleteAudioTrack(track.path);
 
         const wasCurrent = targetIndex === index;
         if (wasCurrent) {

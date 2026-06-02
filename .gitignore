@@ -1,1 +1,6 @@
 dist/
+node_modules/
+.wrangler/
+.dev.vars
+seed-user.sql
+d1-seed.sql

@@ -1,11 +1,13 @@
 import {
     SUPABASE_CONFIGURED,
-    supabase,
     requireSession,
     signOutAndRedirect,
     fetchCategories,
     fetchProducts,
     escapeHtml,
+    createCategory,
+    updateCategoryById,
+    deleteCategoryById,
 } from './supabase_client.js';
 
 let CATEGORIES = [];
@@ -35,7 +37,7 @@ function render() {
     if (!list) return;
 
     if (CATEGORIES.length === 0) {
-        list.innerHTML = '<div class="cat-list-empty">Chưa có danh mục nào. Thêm danh mục đầu tiên ở phía trên ↑</div>';
+        list.innerHTML = '<div class="cat-list-empty">Chua co danh muc nao. Them danh muc dau tien o phia tren.</div>';
         return;
     }
 
@@ -48,19 +50,19 @@ function render() {
             : `<div class="cat-row-name">${safeName}</div>`;
         const actions = isEditing
             ? `
-                <button type="button" class="cat-action save" data-action="save" data-id="${cat.id}">✓ Lưu</button>
-                <button type="button" class="cat-action" data-action="cancel" data-id="${cat.id}">Huỷ</button>
+                <button type="button" class="cat-action save" data-action="save" data-id="${cat.id}">Luu</button>
+                <button type="button" class="cat-action" data-action="cancel" data-id="${cat.id}">Huy</button>
             `
             : `
-                <button type="button" class="cat-action" data-action="edit" data-id="${cat.id}">✎ Sửa</button>
-                <button type="button" class="cat-action danger" data-action="delete" data-id="${cat.id}">✕ Xoá</button>
+                <button type="button" class="cat-action" data-action="edit" data-id="${cat.id}">Sua</button>
+                <button type="button" class="cat-action danger" data-action="delete" data-id="${cat.id}">Xoa</button>
             `;
 
         return `
             <div class="cat-row-item" data-id="${cat.id}">
-                <div class="cat-row-icon">✿</div>
+                <div class="cat-row-icon">*</div>
                 ${nameBlock}
-                <span class="cat-row-count">${count} sản phẩm</span>
+                <span class="cat-row-count">${count} san pham</span>
                 <div class="cat-row-actions">${actions}</div>
             </div>
         `;
@@ -71,32 +73,27 @@ async function addCategory(name) {
     const trimmed = name.trim();
     if (!trimmed) return;
     if (CATEGORIES.some(c => c.ten_danh_muc.toLowerCase() === trimmed.toLowerCase())) {
-        alert(`Danh mục "${trimmed}" đã tồn tại.`);
+        alert(`Danh muc "${trimmed}" da ton tai.`);
         return;
     }
-    const { error } = await supabase.from('categories').insert({ ten_danh_muc: trimmed });
-    if (error) throw error;
+    await createCategory({ ten_danh_muc: trimmed });
     await loadData();
 }
 
 async function updateCategory(id, newName) {
     const trimmed = newName.trim();
     if (!trimmed) {
-        alert('Tên danh mục không được để trống.');
+        alert('Ten danh muc khong duoc de trong.');
         return;
     }
     const conflict = CATEGORIES.find(c =>
         c.id !== id && c.ten_danh_muc.toLowerCase() === trimmed.toLowerCase()
     );
     if (conflict) {
-        alert(`Đã có danh mục "${trimmed}".`);
+        alert(`Da co danh muc "${trimmed}".`);
         return;
     }
-    const { error } = await supabase
-        .from('categories')
-        .update({ ten_danh_muc: trimmed })
-        .eq('id', id);
-    if (error) throw error;
+    await updateCategoryById(id, { ten_danh_muc: trimmed });
     editingId = null;
     await loadData();
 }
@@ -106,31 +103,15 @@ async function deleteCategory(id) {
     if (!cat) return;
     const count = PRODUCT_COUNTS[id] ?? 0;
     const warning = count > 0
-        ? `Danh mục "${cat.ten_danh_muc}" đang có ${count} sản phẩm. Khi xoá, các sản phẩm này sẽ trở thành "Chưa phân loại". Tiếp tục?`
-        : `Xoá danh mục "${cat.ten_danh_muc}"?`;
+        ? `Danh muc "${cat.ten_danh_muc}" dang co ${count} san pham. Khi xoa, cac san pham nay se tro thanh chua phan loai. Tiep tuc?`
+        : `Xoa danh muc "${cat.ten_danh_muc}"?`;
     if (!confirm(warning)) return;
 
-    if (count > 0) {
-        const { error: clearErr } = await supabase
-            .from('products')
-            .update({ category_id: null })
-            .eq('category_id', id);
-        if (clearErr) {
-            alert(`Lỗi khi gỡ liên kết sản phẩm: ${clearErr.message}`);
-            return;
-        }
-    }
-
-    const { error } = await supabase.from('categories').delete().eq('id', id);
-    if (error) {
-        alert(`Lỗi khi xoá danh mục: ${error.message}`);
-        return;
-    }
+    await deleteCategoryById(id);
     await loadData();
 }
 
 function wireEvents() {
-    const form = document.getElementById('cat-add-form');
     document.addEventListener('submit', async (e) => {
         if (e.target.id !== 'cat-add-form') return;
         e.preventDefault();
@@ -142,14 +123,14 @@ function wireEvents() {
             input.focus();
         } catch (error) {
             console.error(error);
-            alert(`Lỗi thêm danh mục: ${error.message}`);
+            alert(`Loi them danh muc: ${error.message}`);
         }
     });
 
     document.addEventListener('click', async (e) => {
         const btn = e.target.closest('.cat-action');
         if (!btn) return;
-        const id = Number(btn.dataset.id);
+        const id = btn.dataset.id;
         const action = btn.dataset.action;
 
         if (action === 'edit') {
@@ -169,7 +150,7 @@ function wireEvents() {
                 await updateCategory(id, input.value);
             } catch (error) {
                 console.error(error);
-                alert(`Lỗi cập nhật: ${error.message}`);
+                alert(`Loi cap nhat: ${error.message}`);
             }
             return;
         }
@@ -178,7 +159,7 @@ function wireEvents() {
                 await deleteCategory(id);
             } catch (error) {
                 console.error(error);
-                alert(`Lỗi xoá: ${error.message}`);
+                alert(`Loi xoa: ${error.message}`);
             }
         }
     });
@@ -188,17 +169,16 @@ function wireEvents() {
         const input = e.target.closest('.cat-row-name-input');
         if (!input) return;
         e.preventDefault();
-        const id = Number(input.dataset.editId);
-        updateCategory(id, input.value).catch(error => {
+        updateCategory(input.dataset.editId, input.value).catch(error => {
             console.error(error);
-            alert(`Lỗi cập nhật: ${error.message}`);
+            alert(`Loi cap nhat: ${error.message}`);
         });
     });
 }
 
 export async function initCategoriesPage() {
     if (!SUPABASE_CONFIGURED) {
-        showError('Chưa cấu hình Supabase. Hãy cập nhật supabase-config.js.');
+        showError('Chua cau hinh Cloudflare API.');
         return;
     }
 
@@ -212,8 +192,8 @@ export async function initCategoriesPage() {
     try {
         await loadData();
     } catch (error) {
-        console.error('Lỗi tải danh mục:', error);
-        showError(error.message || 'Không tải được danh mục.');
+        console.error('Loi tai danh muc:', error);
+        showError(error.message || 'Khong tai duoc danh muc.');
     }
 }
 

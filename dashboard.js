@@ -99,7 +99,7 @@ export async function initDashboard() {
         const march7th = products.filter(p => isInMarchGroup(p.ten_nhan_vat));
         const others = products.filter(p => !isInMarchGroup(p.ten_nhan_vat));
         const recent = [...products]
-            .sort((a, b) => String(b.ngay_them || '').localeCompare(String(a.ngay_them || '')) || Number(b.id || 0) - Number(a.id || 0))
+            .sort((a, b) => String(b.ngay_them || '').localeCompare(String(a.ngay_them || '')) || String(b.id || '').localeCompare(String(a.id || '')))
             .slice(0, 5);
 
         fillGroup('m7', summarize(march7th));

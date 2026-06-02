@@ -472,7 +472,7 @@
         <div class="mp-meta">
             <div class="mp-eyebrow">NOW PLAYING · COSMODYSSEY</div>
             <div class="mp-title" id="mp-title">Đang tải thư viện...</div>
-            <div class="mp-artist" id="mp-artist">Supabase Storage · audio</div>
+            <div class="mp-artist" id="mp-artist">Cloudflare R2 · audio</div>
         </div>
         <button type="button" class="mp-x" id="mp-close" aria-label="Đóng">×</button>
     </div>
